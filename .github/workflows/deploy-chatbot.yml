@@ -94,26 +94,6 @@ jobs:
           provider_project_number="$(cut -d/ -f2 <<<"${WIF_PROVIDER}")"
           test "${project_number}" = "${provider_project_number}"
 
-      # One-time migration only. Remove this step after the first successful run.
-      - name: Migrate Gemini key to Secret Manager when empty
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          set -euo pipefail
-
-          enabled_versions="$(gcloud secrets versions list "${{ env.GEMINI_SECRET_NAME }}" \
-            --project "${{ vars.GCP_PROJECT_ID }}" \
-            --filter='state=ENABLED' \
-            --format='value(name)' | awk 'NF {count++} END {print count+0}')"
-
-          if [[ "${enabled_versions}" -eq 0 ]]; then
-            test -n "${GEMINI_API_KEY}"
-            printf '%s' "${GEMINI_API_KEY}" | gcloud secrets versions add "${{ env.GEMINI_SECRET_NAME }}" \
-              --project "${{ vars.GCP_PROJECT_ID }}" \
-              --data-file=- \
-              --quiet >/dev/null
-          fi
-
       - name: Deploy public chatbot API
         run: |
           gcloud run deploy "${{ env.SERVICE_NAME }}" \
@@ -122,7 +102,6 @@ jobs:
             --project "${{ vars.GCP_PROJECT_ID }}" \
             --service-account "${{ vars.GCP_RUNTIME_SA }}" \
             --build-service-account "${{ vars.GCP_BUILD_SA }}" \
-            --remove-env-vars "GEMINI_API_KEY" \
             --update-env-vars "CONTENT_URL=${{ env.CONTENT_URL }},DOCUMENT_CACHE_SECONDS=3600" \
             --update-secrets "GEMINI_API_KEY=${{ env.GEMINI_SECRET_NAME }}:latest" \
             --allow-unauthenticated \
@@ -139,37 +118,69 @@ jobs:
         run: |
           set -euo pipefail
 
-          service_json="$(gcloud run services describe "${{ env.SERVICE_NAME }}" \
-            --region "${{ env.REGION }}" \
-            --project "${PROJECT_ID}" \
-            --format json)"
+          retry() {
+            local label="$1"
+            shift
+            for attempt in 1 2 3 4 5; do
+              if "$@"; then
+                echo "PASS ${label}"
+                return 0
+              fi
+              if [[ "${attempt}" -lt 5 ]]; then
+                sleep 3
+              fi
+            done
+            echo "FAIL ${label}" >&2
+            return 1
+          }
 
-          jq -e '.status.conditions[] | select(.type == "Ready") | .status == "True"' \
-            <<<"${service_json}" >/dev/null
-          jq -e '[.spec.template.spec.containers[0].env[]? | select(.name == "GEMINI_API_KEY")][0]
-            | has("valueFrom") or has("valueSource")' <<<"${service_json}" >/dev/null
+          check_service_configuration() {
+            service_json="$(gcloud run services describe "${{ env.SERVICE_NAME }}" \
+              --region "${{ env.REGION }}" \
+              --project "${PROJECT_ID}" \
+              --format json)" || return 1
+            jq -e '.status.conditions[] | select(.type == "Ready") | .status == "True"' \
+              <<<"${service_json}" >/dev/null || return 1
+            jq -e '[.spec.template.spec.containers[0].env[]? | select(.name == "GEMINI_API_KEY")][0]
+              | has("valueFrom") or has("valueSource")' <<<"${service_json}" >/dev/null
+          }
 
-          policy_json="$(gcloud run services get-iam-policy "${{ env.SERVICE_NAME }}" \
-            --region "${{ env.REGION }}" \
-            --project "${PROJECT_ID}" \
-            --format json)"
-          jq -e 'any(.bindings[]?; .role == "roles/run.invoker"
-            and (.members | index("allUsers") != null))' <<<"${policy_json}" >/dev/null
+          check_public_iam() {
+            policy_json="$(gcloud run services get-iam-policy "${{ env.SERVICE_NAME }}" \
+              --region "${{ env.REGION }}" \
+              --project "${PROJECT_ID}" \
+              --format json)" || return 1
+            jq -e 'any(.bindings[]?; .role == "roles/run.invoker"
+              and (.members | index("allUsers") != null))' <<<"${policy_json}" >/dev/null
+          }
 
+          retry 'Cloud Run Ready and Secret reference' check_service_configuration
+          retry 'public invoker IAM' check_public_iam
           service_url="$(jq -r '.status.url' <<<"${service_json}")"
-          curl --fail --silent --show-error "${service_url}/" >/dev/null
 
-          cors_headers="$(curl --silent --show-error --dump-header - --output /dev/null \
-            --request OPTIONS "${service_url}/api/chat" \
-            --header 'Origin: https://caocharles.github.io' \
-            --header 'Access-Control-Request-Method: POST')"
-          grep -Eiq '^access-control-allow-origin: https://caocharles.github.io\r?$' \
-            <<<"${cors_headers}"
+          check_health() {
+            curl --fail --silent --show-error "${service_url}/" >/dev/null
+          }
 
-          chat_response="$(curl --fail --silent --show-error "${service_url}/api/chat" \
-            --header 'Content-Type: application/json' \
-            --header 'Origin: https://caocharles.github.io' \
-            --data '{"history":[],"message":"Cloud Run 的 Revision 是什麼？請用一句話回答並附上本站文件連結。","session_id":"deployment-smoke-test"}')"
-          jq -e '.text | type == "string" and length >= 20
-            and contains("caocharles.github.io/ai-deploy-docs/")' \
-            <<<"${chat_response}" >/dev/null
+          check_cors() {
+            cors_headers="$(curl --fail --silent --show-error --dump-header - --output /dev/null \
+              --request OPTIONS "${service_url}/api/chat" \
+              --header 'Origin: https://caocharles.github.io' \
+              --header 'Access-Control-Request-Method: POST')" || return 1
+            grep -Eiq '^access-control-allow-origin: https://caocharles.github.io\r?$' \
+              <<<"${cors_headers}"
+          }
+
+          check_chat() {
+            chat_response="$(curl --fail --silent --show-error "${service_url}/api/chat" \
+              --header 'Content-Type: application/json' \
+              --header 'Origin: https://caocharles.github.io' \
+              --data '{"history":[],"message":"Cloud Run 的 Revision 是什麼？請用一句話回答並附上本站文件連結。","session_id":"deployment-smoke-test"}')" || return 1
+            jq -e '.text | type == "string" and length >= 20
+              and contains("caocharles.github.io/ai-deploy-docs/")' \
+              <<<"${chat_response}" >/dev/null
+          }
+
+          retry 'health endpoint' check_health
+          retry 'CORS preflight' check_cors
+          retry 'Gemini chat response with documentation link' check_chat

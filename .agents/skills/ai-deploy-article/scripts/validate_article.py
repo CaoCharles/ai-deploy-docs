@@ -11,7 +11,8 @@ from pathlib import Path
 import yaml
 
 
-REQUIRED_FRONTMATTER = ("authors", "date", "updated", "tags")
+REQUIRED_FRONTMATTER = ("authors", "tags")
+GIT_MANAGED_FRONTMATTER = ("date", "updated")
 REQUIRED_HEADINGS = (
     "學習目標",
     "本章在整體架構的位置",
@@ -58,6 +59,10 @@ def validate_text(text: str) -> list[str]:
         value = frontmatter.get(key)
         if value in (None, "", []):
             errors.append(f"frontmatter 缺少 `{key}`")
+
+    for key in GIT_MANAGED_FRONTMATTER:
+        if key in frontmatter:
+            errors.append(f"frontmatter 不應手動設定 `{key}`；日期由 Git history 產生")
 
     h1_lines = re.findall(r"^# (.+)$", body, flags=re.MULTILINE)
     if len(h1_lines) != 1:

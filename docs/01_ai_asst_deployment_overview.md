@@ -1,8 +1,6 @@
 ---
 authors:
   - name: Charles Cao
-date: 2026-08-21
-updated: 2026-08-21
 tags:
   - Architecture
   - Overview
@@ -45,22 +43,42 @@ tags:
 !!! example "ai-asst-km 實際做法"
     使用者請求會經過 React Frontend、Model API 與 Data API；新版本則由三個 GitHub Repository 的 Actions workflow 分別交付到 Cloud Run 或 Firebase Hosting。
 
+### Runtime：用 C4 Container Diagram 看應用程式責任
+
+<figure markdown="span">
+  ![ai-asst-km Runtime 的 C4 Container 架構圖](assets/diagrams/01_ai_asst_c4_container.png)
+  <figcaption>ai-asst-km Runtime：使用者、三個核心 Container 與兩個外部 Software System</figcaption>
+</figure>
+
+點擊圖片可放大閱讀；需要修改時可[下載 draw.io 可編輯原始檔](assets/diagrams/source/01_ai_asst_c4_container.drawio)。
+
+這張圖依照 C4 Container Diagram 的方式閱讀：
+
+1. 先找虛線框，確認 `ai-asst-km` 的軟體系統邊界。
+2. 邊界內是團隊負責的三個 Container：Web Frontend、Model API 與 Data API。
+3. 邊界外的 Azure OpenAI 和 MongoDB Atlas 是系統依賴的外部 Software System。
+4. 沿著單向箭頭閱讀動作、HTTP path 與通訊協定，就能還原一次提問的 Runtime 資料流。
+
+!!! note "C4 Container 不是 Docker Container"
+    C4 的 Container 指可獨立執行或儲存資料的應用程式單位，例如 React Web Application、API 或 Database；它不等同於 Docker Container 或 Cloud Run Instance。
+
+### Deployment：簡單交付步驟保留 Mermaid
+
+Deployment 的完整基礎設施會在後續章節另外用 Deployment Diagram 說明。這裡只需要先認得兩種交付結果，因此保留小型 Mermaid 流程：
+
 ```mermaid
 flowchart TB
-    subgraph runtime["Runtime：使用者操作系統"]
-        User["使用者"] --> Frontend["React Frontend"]
-        Frontend --> Model["Model API"]
-        Frontend --> Data["Data API"]
-    end
-
     subgraph deploy["Deployment：工程師發布版本"]
         GitHub["GitHub Repository"] --> Actions["GitHub Actions"]
-        Actions --> Registry["Artifact Registry"]
-        Registry --> Run["Cloud Run"]
+        Actions --> Image["Docker Image"]
+        Image --> Registry["Artifact Registry"]
+        Registry --> Run["Cloud Run：Model／Data API"]
+        Actions --> Static["Vite Build"]
+        Static --> Hosting["Firebase Hosting：Frontend"]
     end
 ```
 
-上半部的箭頭代表 HTTP 請求與資料流；下半部的箭頭代表程式版本的交付。先分清箭頭屬於哪一類，後面的服務就不容易混在一起。
+上方 C4 圖的箭頭代表 HTTP 請求與資料流；這張 Mermaid 的箭頭代表程式版本與建置產物的交付。先分清箭頭屬於哪一類，後面的服務就不容易混在一起。
 
 ## 系列閱讀順序
 
