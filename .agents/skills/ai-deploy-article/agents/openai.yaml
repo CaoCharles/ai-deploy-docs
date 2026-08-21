@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Deploy 文章"
+  short_description: "撰寫與校對 AI 應用部署教學章節"
+  brand_color: "#673AB7"
+  default_prompt: "Use $ai-deploy-article to write or revise one verified chapter for the ai-deploy-docs site."
+

@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Deploy 發布"
+  short_description: "驗證、預覽與發布 MkDocs 部署筆記"
+  brand_color: "#673AB7"
+  default_prompt: "Use $ai-deploy-publish to validate and preview the ai-deploy-docs site before publishing."
+

@@ -1,0 +1,13 @@
+[project]
+name = "ai-deploy-docs"
+version = "0.1.0"
+description = "AI Assistant deployment learning notes and hands-on labs"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "mkdocs>=1.6.1",
+    "mkdocs-git-authors-plugin>=0.10.0",
+    "mkdocs-git-revision-date-localized-plugin>=1.5.0",
+    "mkdocs-glightbox>=0.5.2",
+    "mkdocs-material>=9.7.1",
+]
+

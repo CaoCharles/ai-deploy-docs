@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Deploy 助理"
+  short_description: "維護部署筆記的 Gemini 問答助理與 Cloud Run"
+  brand_color: "#673AB7"
+  default_prompt: "Use $ai-deploy-chatbot to safely update and validate the ai-deploy-docs question-answering assistant."
+

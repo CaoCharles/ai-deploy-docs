@@ -1,0 +1,110 @@
+site_name: AI 應用部署實戰筆記
+site_description: 從 Python API、Gunicorn 與 Docker，一路理解 GitHub Actions、Artifact Registry 和 Google Cloud Run
+site_author: Charles Cao
+site_url: https://caocharles.github.io/ai-deploy-docs/
+copyright: Copyright &copy; 2026 Charles Cao - 筆記製作者
+
+hooks:
+  - hooks/generate_content.py
+
+theme:
+  name: material
+  language: zh-TW
+  custom_dir: overrides
+  icon:
+    logo: material/cloud-upload
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: 切換至深色模式
+    - scheme: slate
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: 切換至淺色模式
+  font:
+    text: Noto Sans TC
+    code: JetBrains Mono
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search:
+      lang: zh
+  - glightbox:
+      touchNavigation: true
+      loop: false
+      effect: zoom
+      width: 100%
+      height: auto
+      zoomable: true
+      draggable: true
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra_css:
+  - assets/stylesheets/extra.css
+  - assets/css/chatbot.css
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/marked/marked.min.js
+  - https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js
+  - assets/js/chatbot-config.js
+  - assets/js/chatbot.js
+
+nav:
+  - 首頁: index.md
+  - AI 系統部署架構:
+      - 01 部署前，先看懂兩條流程: 01_ai_asst_deployment_overview.md
+      - 02 Runtime 使用者請求如何流動: 02_runtime_request_flow.md
+      - 03 Deployment 程式碼如何上線: 03_cicd_deployment_flow.md
+      - 04 Cloud Run 核心概念: 04_cloud_run_core_concepts.md
+      - 05 設定、環境變數與 Secret: 05_configuration_and_secrets.md

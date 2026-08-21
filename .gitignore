@@ -1,0 +1,11 @@
+.DS_Store
+.venv/
+.vscode/
+.playwright-cli/
+site/
+output/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+gha-creds-*.json

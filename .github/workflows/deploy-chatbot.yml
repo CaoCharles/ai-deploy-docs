@@ -1,0 +1,84 @@
+name: Test and Deploy Chatbot to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-chatbot.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-chatbot.yml"
+  workflow_dispatch:
+
+env:
+  SERVICE_NAME: ai-deploy-docs-chatbot
+  REGION: asia-east1
+  CONTENT_URL: https://caocharles.github.io/ai-deploy-docs/content.json
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+        with:
+          version: "0.9.9"
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.14
+
+      - name: Install locked backend dependencies
+        run: uv sync --project backend --locked
+
+      - name: Run backend tests
+        run: uv run --project backend pytest -q backend/tests
+
+  deploy:
+    if: github.event_name != 'pull_request' && vars.GCP_PROJECT_ID != ''
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SA }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Deploy public chatbot API
+        run: |
+          gcloud run deploy "${{ env.SERVICE_NAME }}" \
+            --source backend \
+            --region "${{ env.REGION }}" \
+            --project "${{ vars.GCP_PROJECT_ID }}" \
+            --service-account "${{ vars.GCP_RUNTIME_SA }}" \
+            --build-service-account "${{ vars.GCP_BUILD_SA }}" \
+            --set-env-vars "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},CONTENT_URL=${{ env.CONTENT_URL }},DOCUMENT_CACHE_SECONDS=3600" \
+            --allow-unauthenticated \
+            --cpu 1 \
+            --memory 512Mi \
+            --concurrency 10 \
+            --max-instances 3 \
+            --timeout 90 \
+            --quiet
+
+      - name: Show service URL
+        run: |
+          gcloud run services describe "${{ env.SERVICE_NAME }}" \
+            --region "${{ env.REGION }}" \
+            --project "${{ vars.GCP_PROJECT_ID }}" \
+            --format "value(status.url)"
