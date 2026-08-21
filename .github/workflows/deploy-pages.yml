@@ -40,7 +40,7 @@ jobs:
           enable-cache: true
 
       - name: Set up Python
-        run: uv python install 3.14
+        run: uv python install "$(cat .python-version)"
 
       - name: Install locked dependencies
         run: uv sync --locked
@@ -66,4 +66,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
