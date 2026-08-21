@@ -122,6 +122,7 @@ jobs:
             --project "${{ vars.GCP_PROJECT_ID }}" \
             --service-account "${{ vars.GCP_RUNTIME_SA }}" \
             --build-service-account "${{ vars.GCP_BUILD_SA }}" \
+            --remove-env-vars "GEMINI_API_KEY" \
             --update-env-vars "CONTENT_URL=${{ env.CONTENT_URL }},DOCUMENT_CACHE_SECONDS=3600" \
             --update-secrets "GEMINI_API_KEY=${{ env.GEMINI_SECRET_NAME }}:latest" \
             --allow-unauthenticated \
