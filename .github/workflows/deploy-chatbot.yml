@@ -6,10 +6,12 @@ on:
       - main
     paths:
       - "backend/**"
+      - ".python-version"
       - ".github/workflows/deploy-chatbot.yml"
   pull_request:
     paths:
       - "backend/**"
+      - ".python-version"
       - ".github/workflows/deploy-chatbot.yml"
   workflow_dispatch:
 
@@ -17,6 +19,7 @@ env:
   SERVICE_NAME: ai-deploy-docs-chatbot
   REGION: asia-east1
   CONTENT_URL: https://caocharles.github.io/ai-deploy-docs/content.json
+  GEMINI_SECRET_NAME: ai-deploy-docs-gemini-api-key
 
 jobs:
   test:
@@ -25,7 +28,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
         with:
           version: "0.12.5"
           enable-cache: true
@@ -59,6 +62,38 @@ jobs:
 
       - uses: google-github-actions/setup-gcloud@v3
 
+      - name: Validate GCP identity configuration
+        env:
+          PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          WIF_PROVIDER: ${{ vars.GCP_WIF_PROVIDER }}
+          DEPLOYER_SA: ${{ vars.GCP_DEPLOYER_SA }}
+          RUNTIME_SA: ${{ vars.GCP_RUNTIME_SA }}
+          BUILD_SA: ${{ vars.GCP_BUILD_SA }}
+        run: |
+          set -euo pipefail
+
+          account_project() {
+            local account="${1##*/}"
+            local domain="${account#*@}"
+            printf '%s' "${domain%.iam.gserviceaccount.com}"
+          }
+
+          deployer_project="$(account_project "${DEPLOYER_SA}")"
+          runtime_project="$(account_project "${RUNTIME_SA}")"
+          if [[ "${BUILD_SA}" == projects/*/serviceAccounts/* ]]; then
+            build_project="$(cut -d/ -f2 <<<"${BUILD_SA}")"
+          else
+            build_project="$(account_project "${BUILD_SA}")"
+          fi
+
+          test "${PROJECT_ID}" = "${deployer_project}"
+          test "${PROJECT_ID}" = "${runtime_project}"
+          test "${PROJECT_ID}" = "${build_project}"
+
+          project_number="$(gcloud projects describe "${PROJECT_ID}" --format='value(projectNumber)')"
+          provider_project_number="$(cut -d/ -f2 <<<"${WIF_PROVIDER}")"
+          test "${project_number}" = "${provider_project_number}"
+
       - name: Deploy public chatbot API
         run: |
           gcloud run deploy "${{ env.SERVICE_NAME }}" \
@@ -67,7 +102,8 @@ jobs:
             --project "${{ vars.GCP_PROJECT_ID }}" \
             --service-account "${{ vars.GCP_RUNTIME_SA }}" \
             --build-service-account "${{ vars.GCP_BUILD_SA }}" \
-            --set-env-vars "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},CONTENT_URL=${{ env.CONTENT_URL }},DOCUMENT_CACHE_SECONDS=3600" \
+            --update-env-vars "CONTENT_URL=${{ env.CONTENT_URL }},DOCUMENT_CACHE_SECONDS=3600" \
+            --update-secrets "GEMINI_API_KEY=${{ env.GEMINI_SECRET_NAME }}:latest" \
             --allow-unauthenticated \
             --cpu 1 \
             --memory 512Mi \
@@ -76,9 +112,75 @@ jobs:
             --timeout 90 \
             --quiet
 
-      - name: Show service URL
+      - name: Verify deployed service
+        env:
+          PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
         run: |
-          gcloud run services describe "${{ env.SERVICE_NAME }}" \
-            --region "${{ env.REGION }}" \
-            --project "${{ vars.GCP_PROJECT_ID }}" \
-            --format "value(status.url)"
+          set -euo pipefail
+
+          retry() {
+            local label="$1"
+            shift
+            for attempt in 1 2 3 4 5; do
+              if "$@"; then
+                echo "PASS ${label}"
+                return 0
+              fi
+              if [[ "${attempt}" -lt 5 ]]; then
+                sleep 3
+              fi
+            done
+            echo "FAIL ${label}" >&2
+            return 1
+          }
+
+          check_service_configuration() {
+            service_json="$(gcloud run services describe "${{ env.SERVICE_NAME }}" \
+              --region "${{ env.REGION }}" \
+              --project "${PROJECT_ID}" \
+              --format json)" || return 1
+            jq -e '.status.conditions[] | select(.type == "Ready") | .status == "True"' \
+              <<<"${service_json}" >/dev/null || return 1
+            jq -e '[.spec.template.spec.containers[0].env[]? | select(.name == "GEMINI_API_KEY")][0]
+              | has("valueFrom") or has("valueSource")' <<<"${service_json}" >/dev/null
+          }
+
+          check_public_iam() {
+            policy_json="$(gcloud run services get-iam-policy "${{ env.SERVICE_NAME }}" \
+              --region "${{ env.REGION }}" \
+              --project "${PROJECT_ID}" \
+              --format json)" || return 1
+            jq -e 'any(.bindings[]?; .role == "roles/run.invoker"
+              and (.members | index("allUsers") != null))' <<<"${policy_json}" >/dev/null
+          }
+
+          retry 'Cloud Run Ready and Secret reference' check_service_configuration
+          retry 'public invoker IAM' check_public_iam
+          service_url="$(jq -r '.status.url' <<<"${service_json}")"
+
+          check_health() {
+            curl --fail --silent --show-error "${service_url}/" >/dev/null
+          }
+
+          check_cors() {
+            cors_headers="$(curl --fail --silent --show-error --dump-header - --output /dev/null \
+              --request OPTIONS "${service_url}/api/chat" \
+              --header 'Origin: https://caocharles.github.io' \
+              --header 'Access-Control-Request-Method: POST')" || return 1
+            tr -d '\r' <<<"${cors_headers}" \
+              | grep -Fxiq 'access-control-allow-origin: https://caocharles.github.io'
+          }
+
+          check_chat() {
+            chat_response="$(curl --fail --silent --show-error "${service_url}/api/chat" \
+              --header 'Content-Type: application/json' \
+              --header 'Origin: https://caocharles.github.io' \
+              --data '{"history":[],"message":"Cloud Run 的 Revision 是什麼？請用一句話回答並附上本站文件連結。","session_id":"deployment-smoke-test"}')" || return 1
+            jq -e '.text | type == "string" and length >= 20
+              and contains("caocharles.github.io/ai-deploy-docs/")' \
+              <<<"${chat_response}" >/dev/null
+          }
+
+          retry 'health endpoint' check_health
+          retry 'CORS preflight' check_cors
+          retry 'Gemini chat response with documentation link' check_chat

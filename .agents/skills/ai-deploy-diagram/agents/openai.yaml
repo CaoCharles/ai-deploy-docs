@@ -1,0 +1,5 @@
+interface:
+  display_name: "AI Deploy 架構圖"
+  short_description: "建立 C4 與 draw.io 軟體架構圖及 PNG"
+  brand_color: "#673AB7"
+  default_prompt: "Use $ai-deploy-diagram to create a verified editable architecture diagram and export it for the ai-deploy-docs site."

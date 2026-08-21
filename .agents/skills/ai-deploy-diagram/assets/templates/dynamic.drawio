@@ -1,0 +1,61 @@
+<mxfile host="app.diagrams.net" modified="2026-08-21T00:00:00.000Z" version="31.1.8" type="device" compressed="false">
+  <diagram id="dynamic-template" name="C4 Dynamic">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="C4 Dynamic Diagram — Example Request" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontFamily=Noto Sans TC;fontSize=26;fontStyle=1;fontColor=#2D2438;" vertex="1" parent="1">
+          <mxGeometry x="60" y="35" width="1280" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="person" value="&lt;b&gt;[Person] 使用者&lt;/b&gt;&lt;br&gt;發起一次請求" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3F0F8;strokeColor=#5E35B1;strokeWidth=2;fontFamily=Noto Sans TC;fontSize=16;spacing=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="210" width="220" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="frontend" value="&lt;b&gt;[Container] Web Application&lt;/b&gt;&lt;br&gt;[Web Technology]&lt;br&gt;驗證輸入並呼叫 API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1C4E9;strokeColor=#512DA8;strokeWidth=2;fontFamily=Noto Sans TC;fontSize=15;spacing=12;" vertex="1" parent="1">
+          <mxGeometry x="370" y="200" width="250" height="145" as="geometry"/>
+        </mxCell>
+        <mxCell id="api" value="&lt;b&gt;[Container] API Application&lt;/b&gt;&lt;br&gt;[Backend Technology]&lt;br&gt;協調請求與回應" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDE7F6;strokeColor=#673AB7;strokeWidth=2;fontFamily=Noto Sans TC;fontSize=15;spacing=12;" vertex="1" parent="1">
+          <mxGeometry x="710" y="200" width="250" height="145" as="geometry"/>
+        </mxCell>
+        <mxCell id="external" value="&lt;b&gt;[Software System] External Service&lt;/b&gt;&lt;br&gt;處理外部能力" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#616161;strokeWidth=2;fontFamily=Noto Sans TC;fontSize=15;spacing=12;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="210" width="250" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="database" value="&lt;b&gt;[Container] Database&lt;/b&gt;&lt;br&gt;[Database Technology]&lt;br&gt;保存處理結果" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#EDE7F6;strokeColor=#673AB7;strokeWidth=2;fontFamily=Noto Sans TC;fontSize=15;spacing=12;" vertex="1" parent="1">
+          <mxGeometry x="710" y="535" width="250" height="145" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend" value="&lt;b&gt;圖例 (Legend)&lt;/b&gt;&lt;br&gt;編號：互動順序&lt;br&gt;深紫：本情境焦點&lt;br&gt;淡紫：內部 Container&lt;br&gt;灰色：外部 System" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#BDBDBD;dashed=1;fontFamily=Noto Sans TC;fontSize=13;align=left;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="535" width="250" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="step-1" value="1. 送出 [HTTPS]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#5E35B1;strokeWidth=2;fontFamily=Noto Sans TC;fontSize=13;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="person" target="frontend">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="step-2" value="2. 呼叫 API [JSON]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#5E35B1;strokeWidth=2;fontFamily=Noto Sans TC;fontSize=13;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="frontend" target="api">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="step-3" value="3. 呼叫外部服務 [JSON]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#616161;strokeWidth=2;fontFamily=Noto Sans TC;fontSize=13;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="api" target="external">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="step-4" value="4. 回傳 [JSON]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=block;endFill=1;strokeColor=#616161;strokeWidth=2;fontFamily=Noto Sans TC;fontSize=13;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="external" target="api">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1175" y="420"/>
+              <mxPoint x="835" y="420"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step-5" value="5. 保存 [DB Protocol]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endFill=1;strokeColor=#5E35B1;strokeWidth=2;fontFamily=Noto Sans TC;fontSize=13;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="api" target="database">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-105" as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="step-6" value="6. 回傳頁面 [JSON]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=block;endFill=1;strokeColor=#5E35B1;strokeWidth=2;fontFamily=Noto Sans TC;fontSize=13;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="api" target="frontend">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="835" y="470"/>
+              <mxPoint x="495" y="470"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

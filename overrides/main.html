@@ -10,8 +10,21 @@
     <span class="twemoji">{% include ".icons/material/book-open-page-variant.svg" %}</span>
     <span><strong>系列：</strong>AI 應用部署實戰</span>
   </span>
+  {% if page and page.file and page.file.src_uri != "index.md" %}
+    {% if page.meta.git_creation_date_localized %}
+      <span class="meta-item">
+        <span class="twemoji">{% include ".icons/material/calendar-plus.svg" %}</span>
+        <span><strong>建立日期：</strong>{{ page.meta.git_creation_date_localized | safe }}</span>
+      </span>
+    {% endif %}
+    {% if page.meta.git_revision_date_localized %}
+      <span class="meta-item">
+        <span class="twemoji">{% include ".icons/material/calendar-edit.svg" %}</span>
+        <span><strong>更新日期：</strong>{{ page.meta.git_revision_date_localized | safe }}</span>
+      </span>
+    {% endif %}
+  {% endif %}
 </div>
 
 {{ super() }}
 {% endblock %}
-

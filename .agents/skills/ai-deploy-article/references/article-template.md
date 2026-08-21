@@ -8,8 +8,6 @@
 ---
 authors:
   - name: Charles Cao
-date: YYYY-MM-DD
-updated: YYYY-MM-DD
 tags:
   - Topic
 ---
@@ -22,7 +20,7 @@ tags:
 
 ## 本章在整體架構的位置
 
-使用一張小型 Mermaid 圖、簡化流程或一段精確文字，標示本章涵蓋的元件與上下游。
+使用一段精確文字或一張適合的圖標示本章涵蓋的元件與上下游。正式 C4／Deployment 架構使用 draw.io PNG 並提供 source；小型流程才使用 Mermaid。
 
 ## 前置知識
 
@@ -71,6 +69,8 @@ tags:
 ## 延伸閱讀
 ```
 
+`date` 與 `updated` 不寫入 frontmatter。網站使用 Git history 自動產生建立日期與更新日期，避免文章內容與日期出現兩套來源；GitHub Pages checkout 必須保留完整歷史。
+
 ## 章節選擇原則
 
 - 架構總覽：先分 Runtime 與 Deployment，再介紹元件責任與資料流；全貌圖本身可以同時作為章節定位。
@@ -93,3 +93,4 @@ tags:
 - 「基礎觀念」只說通用原理；「ai-asst-km 實際做法」只說可查證現況。
 - 查證來源優先寫 Repository 內的相對位置或服務種類，不把本機絕對路徑寫進公開文章。
 - 延伸閱讀優先連結官方文件；第三方文章只在能補足實務觀點時加入。
+- draw.io 圖後必須說明圖表類型、閱讀順序與邊界；不要只放一張沒有解說的圖片。

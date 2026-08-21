@@ -45,6 +45,15 @@ theme:
 plugins:
   - search:
       lang: zh
+  - git-revision-date-localized:
+      enable_creation_date: true
+      enable_git_follow: true
+      exclude:
+        - index.md
+      fallback_to_build_date: true
+      locale: zh_TW
+      timezone: Asia/Taipei
+      type: iso_date
   - glightbox:
       touchNavigation: true
       loop: false

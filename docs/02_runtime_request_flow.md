@@ -1,8 +1,6 @@
 ---
 authors:
   - name: Charles Cao
-date: 2026-08-21
-updated: 2026-08-21
 tags:
   - Runtime
   - Architecture

@@ -22,7 +22,8 @@ description: 撰寫或修改 ai-deploy-docs 的繁體中文 MkDocs 章節，主�
 7. 加入「實際設定查證」表格，記錄結論、查證來源與查證日期；只記錄檔案或服務種類，不公開機密值。
 8. 為每個 Lab 標示安全等級：`本機實作`、`雲端唯讀` 或 `雲端寫入`。雲端寫入必須說明影響與復原方式，而且不代表已獲准操作正式環境。
 9. 撰寫繁體中文文章。首次出現術語時保留英文，例如「修訂版本（Revision）」。
-10. 對本次新增或修改的章節執行 `uv run python .agents/skills/ai-deploy-article/scripts/validate_article.py <article.md>`，再執行 `uv run mkdocs build --strict`；涉及圖表或版面時，再用瀏覽器檢查桌面與行動版、深色與淺色模式。
+10. `date` 與 `updated` 由 Git history 自動產生，不手動寫入 frontmatter。建立或移動文章後，要確認 GitHub Pages checkout 保留完整歷史，並在實際 HTML 看得到建立日期與更新日期。
+11. 對本次新增或修改的章節執行 `uv run python .agents/skills/ai-deploy-article/scripts/validate_article.py <article.md>`，再執行 `uv run mkdocs build --strict`；涉及圖表或版面時，再用瀏覽器檢查桌面與行動版、深色與淺色模式。
 
 ## 內容原則
 
@@ -36,12 +37,15 @@ description: 撰寫或修改 ai-deploy-docs 的繁體中文 MkDocs 章節，主�
 
 ## Markdown 與圖表規則
 
+- 正式軟體架構、系統邊界、C4 Container 或 Deployment Node 使用 `$ai-deploy-diagram` 建立 `.drawio` source 與 PNG；文章嵌入 PNG、提供原始檔連結並解釋閱讀順序。
+- 只有 3～5 個步驟、沒有複雜系統邊界的小型流程繼續使用 Mermaid。不要為了視覺一致把所有 Mermaid 強制改成 PNG。
 - Mermaid 中文節點使用引號，例如 `A["GitHub Actions"]`。
 - `subgraph` 使用 ID 與顯示名稱，例如 `subgraph deploy["部署流程"]`。
 - Mermaid 節點不要使用 HTML `<br>`。
 - 程式碼區塊標示語言；需要時加入 `title`。
 - Admonition 只用於提醒、風險、補充或成功條件，不要讓每個段落都變成提示框。
 - 表格用於精確對照；流程或多個元件關係優先使用 Mermaid。
+- draw.io 圖檔使用 `docs/assets/diagrams/source/<name>.drawio` 作為 canonical source，PNG 放在 `docs/assets/diagrams/<name>.png`，不得直接修改衍生 PNG。
 
 ## 完成條件
 
@@ -50,5 +54,7 @@ description: 撰寫或修改 ai-deploy-docs 的繁體中文 MkDocs 章節，主�
 - 技術敘述與實際 Repository 或官方文件一致。
 - Lab 已標示安全等級；若為雲端寫入，也已說明影響與復原方式。
 - 導覽與內部連結有效。
+- 建立日期與更新日期來自 Git history，且在實際文章 HTML 可見；首頁不要求顯示。
+- 若文章包含 draw.io 圖，原始檔、PNG、替代文字、圖說與圖後解讀均已完成，且 `$ai-deploy-diagram` 驗證通過。
 - `validate_article.py` 通過。
 - `uv run mkdocs build --strict` 通過。
