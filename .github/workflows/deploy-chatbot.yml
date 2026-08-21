@@ -167,8 +167,8 @@ jobs:
               --request OPTIONS "${service_url}/api/chat" \
               --header 'Origin: https://caocharles.github.io' \
               --header 'Access-Control-Request-Method: POST')" || return 1
-            grep -Eiq '^access-control-allow-origin: https://caocharles.github.io\r?$' \
-              <<<"${cors_headers}"
+            tr -d '\r' <<<"${cors_headers}" \
+              | grep -Fxiq 'access-control-allow-origin: https://caocharles.github.io'
           }
 
           check_chat() {
