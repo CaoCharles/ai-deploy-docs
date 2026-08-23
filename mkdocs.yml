@@ -117,6 +117,7 @@ nav:
       - 02 Runtime 使用者請求如何流動: 02_runtime_request_flow.md
   - 服務啟動基礎:
       - 03 HTTP、GET、POST 與 Flask API: 03_http_flask_api.md
+      - 04 Flask、WSGI、Gunicorn 與 Uvicorn: 04_flask_wsgi_gunicorn_uvicorn.md
   - CI/CD 與交付:
       - 06 程式碼如何上線: 03_cicd_deployment_flow.md
   - GCP Cloud Run:
