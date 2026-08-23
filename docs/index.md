@@ -89,7 +89,7 @@ flowchart LR
 - [x] 第 1 章：系統邊界與 Runtime／Deployment
 - [x] 第 2 章：Runtime 使用者請求如何流動
 - [x] 第 3 章：HTTP、GET、POST 與 Flask API
-- [ ] 第 4 章：Flask、WSGI、Gunicorn 與 Uvicorn
+- [x] 第 4 章：Flask、WSGI、Gunicorn 與 Uvicorn
 - [ ] 第 5 章：Data API 與 MongoDB
 - [x] 第 6 章：GitHub Actions CI/CD 實際流程
 - [x] 第 7 章：GCP Cloud Run 核心概念

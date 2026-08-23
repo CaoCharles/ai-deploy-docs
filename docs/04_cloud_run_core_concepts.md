@@ -83,6 +83,7 @@ Revision 不會被原地修改。這讓每個版本都有明確的 Image 與設�
 | Memory | 2 GiB | 512 MiB | 每個 Instance 的記憶體上限 |
 | Min instances | 0 | 0 | 無流量時允許縮到零 |
 | Max instances | 2 | 3 | 自動擴張的 Instance 上限 |
+| Concurrency | 100 | workflow 未設定；正式服務目前為 80 | 每個 Instance 最多接收的同時 Request 數 |
 | Request timeout | 300 秒 | 60 秒 | Cloud Run 等待單次請求完成的時間 |
 | Startup CPU boost | 有 | workflow 未設定 | 啟動期間是否暫時提供額外 CPU |
 
@@ -101,11 +102,11 @@ Model API 啟動時需要載入的應用資源較多，因此冷啟動感受通�
 
 | 查證項目 | 現行結論 | 來源 | 查證日期 |
 |---|---|---|---|
-| Model API Service | 1 CPU、2 GiB、min 0、max 2、300 秒 | `ai-asst-model-api/.github/workflows/deploy.yml` | 2026-08-21 |
-| Model API startup boost | workflow 有設定 `--cpu-boost` | `ai-asst-model-api/.github/workflows/deploy.yml` | 2026-08-21 |
-| Data API Service | 1 CPU、512 MiB、min 0、max 3、60 秒 | `ai-asst-data-api/.github/workflows/deploy.yml` | 2026-08-21 |
-| Model Gunicorn | 1 sync worker、600 秒 timeout | `ai-asst-model-api/prod/Dockerfile` | 2026-08-21 |
-| Data Gunicorn | 1 sync worker、60 秒 timeout | `ai-asst-data-api/Dockerfile` | 2026-08-21 |
+| Model API Service | 1 CPU、2 GiB、concurrency 100、min 0、max 2、300 秒 | `ai-asst-model-api/.github/workflows/deploy.yml` | 2026-08-23 |
+| Model API startup boost | workflow 有設定 `--cpu-boost` | `ai-asst-model-api/.github/workflows/deploy.yml` | 2026-08-23 |
+| Data API Service | 1 CPU、512 MiB、min 0、max 3、60 秒；正式服務 concurrency 80 | deploy workflow；Cloud Run Service 唯讀查詢 | 2026-08-23 |
+| Model Gunicorn | 4 gthread workers、每個 25 threads、600 秒 timeout | `ai-asst-model-api/prod/Dockerfile` | 2026-08-23 |
+| Data Gunicorn | 1 sync worker、60 秒 timeout | `ai-asst-data-api/Dockerfile` | 2026-08-23 |
 
 ## Lab 實作練習
 
