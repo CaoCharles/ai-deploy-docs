@@ -82,12 +82,12 @@ RATE_LIMIT_REQUESTS = env_int("RATE_LIMIT_REQUESTS", 20, 1, 1_000)
 RATE_LIMIT_WINDOW_SECONDS = env_int("RATE_LIMIT_WINDOW_SECONDS", 60, 1, 3_600)
 GENERIC_SERVICE_ERROR = "AI 助理暫時無法回應，請稍後再試。"
 
-BASE_SYSTEM_PROMPT = """你是《AI 應用部署實戰筆記》的 AI 助理。
+BASE_SYSTEM_PROMPT = """你是《AI KM 系統實戰筆記》的 AI 助理。
 
 ## 回答規則
 1. 使用繁體中文，以初學者能理解的方式回答。
 2. 優先根據本站文件回答，並附上文件提供的完整網址。
-3. 清楚區分一般技術觀念與 ai-asst-km 的實際部署現況。
+3. 清楚區分一般技術觀念與 ai-asst-km 的實際系統實作、執行與部署現況。
 4. 不討論或臆測員工 KM、RAG、Prompt、內部資料與未公開機密。
 5. 不虛構 Project ID、Service URL、Secret、Token、帳號或線上設定。
 6. 文件沒有答案時，明確說明這是一般知識或尚待確認。
@@ -329,4 +329,3 @@ def chat_endpoint(payload: ChatRequest):
     except Exception:
         logger.exception("Gemini request failed model=%s", MODEL_NAME)
         return JSONResponse(status_code=500, content={"detail": GENERIC_SERVICE_ERROR})
-

@@ -7,7 +7,7 @@ tags:
   - Security
 ---
 
-# 第 5 章：設定、環境變數與 Secret
+# 第 8 章：設定、環境變數與 Secret
 
 同一份程式碼部署到不同環境時，API URL、Region 或資料庫可能不同。這些差異不應直接寫死在程式碼裡，而是透過設定與 Secret 注入。
 
@@ -32,18 +32,18 @@ flowchart LR
 
 ## 前置知識
 
-建議先理解[第 3 章的 CI/CD 流程](03_cicd_deployment_flow.md)與[第 4 章的 Revision](04_cloud_run_core_concepts.md)。
+建議先理解[第 6 章的 CI/CD 流程](03_cicd_deployment_flow.md)與[第 7 章的 Revision](04_cloud_run_core_concepts.md)。
 
-## 5.1 核心問題：哪些資料可以公開？
+## 8.1 核心問題：哪些資料可以公開？
 
 設定不應全部視為 Secret，也不能把所有值都當成普通環境變數。分類的關鍵是：值外洩後是否會產生未授權存取。
 
-## 5.2 基礎觀念
+## 8.2 基礎觀念
 
 !!! info "基礎觀念"
     一般設定描述環境差異，例如 Region 與 API URL；Secret 則可用來驗證身分或存取受保護資源。兩者都可以透過環境變數交給程式，但保存位置與權限必須不同。
 
-## 5.3 ai-asst-km 實際做法
+## 8.3 ai-asst-km 實際做法
 
 !!! example "ai-asst-km 實際做法"
     Model API 與 Data API 的一般 Runtime 設定由 deploy workflow 透過 `--set-env-vars` 注入；敏感值則以 `--set-secrets` 引用 Secret Manager。Frontend 的 API Base URL 在 Vite build 時寫入靜態檔。
@@ -173,7 +173,7 @@ gcloud run services describe ai-asst-data-api \
 - `VITE_*` 會進入瀏覽器，不是 Secret 儲存空間。
 - 設定漂移就是 Repository 宣告與線上實際狀態不同。
 
-回到系列入口：[部署前，先看懂兩條流程](01_ai_asst_deployment_overview.md)。
+回到系列入口：[先看懂系統邊界與兩條流程](01_ai_asst_deployment_overview.md)。
 
 ## 延伸閱讀
 

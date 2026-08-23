@@ -60,7 +60,7 @@ def test_backend_owns_prompt_and_uses_documentation():
 
     assert response.status_code == 200
     prompt = models.calls[0]["config"].system_instruction
-    assert "AI 應用部署實戰筆記" in prompt
+    assert "AI KM 系統實戰筆記" in prompt
     assert "Cloud Run" in prompt
     assert "員工 KM" in prompt
 
@@ -114,4 +114,3 @@ def test_internal_error_is_not_returned_to_client():
     assert response.status_code == 500
     assert response.json()["detail"] == chat_server.GENERIC_SERVICE_ERROR
     assert "secret" not in response.text
-

@@ -49,7 +49,7 @@ def on_post_build(config, **kwargs):
     runtime_config = {
         "apiUrl": api_url,
         "siteUrl": site_url,
-        "name": "部署筆記 AI 助理",
+        "name": "AI KM 筆記助理",
     }
     config_path = site_dir / "assets" / "js" / "chatbot-config.js"
     config_path.parent.mkdir(parents=True, exist_ok=True)
@@ -62,4 +62,3 @@ def on_post_build(config, **kwargs):
 
     print(f"Generated {content_path} with {len(documents)} pages")
     print(f"Generated {config_path}; API configured: {bool(api_url)}")
-

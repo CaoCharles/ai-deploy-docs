@@ -7,7 +7,7 @@ tags:
   - Artifact Registry
 ---
 
-# 第 3 章：Deployment 程式碼如何上線
+# 第 6 章：Deployment 程式碼如何上線
 
 Deployment 是工程師把新版本交付到正式環境的流程。`ai-asst-km` 的三個主要 Repository 都使用 GitHub Actions，但 API 與前端的部署產物不同。
 
@@ -32,16 +32,16 @@ flowchart LR
 
 先理解 Repository、commit 與 branch 的基本概念；不需要先會撰寫 GitHub Actions YAML。
 
-## 3.1 核心問題：三個 Repository 交付什麼？
+## 6.1 核心問題：三個 Repository 交付什麼？
 
 兩支 API 交付可執行的 Container Image，Frontend 則交付瀏覽器可下載的靜態網站檔案。
 
-## 3.2 基礎觀念
+## 6.2 基礎觀念
 
 !!! info "基礎觀念"
     CI 回答「這次修改能否通過檢查與建置」；CD 回答「通過檢查的版本如何交付」。CI/CD 是自動化流程，不是實際長期執行 API 的平台。
 
-## 3.3 ai-asst-km 實際做法
+## 6.3 ai-asst-km 實際做法
 
 !!! example "ai-asst-km 實際做法"
     三個 Repository 都有 CI 與 deploy workflow。Model API、Data API build Docker Image 並部署 Cloud Run；Frontend 執行 Vite build 後發布 Firebase Hosting。

@@ -4,7 +4,7 @@
   const config = window.AI_DEPLOY_CHATBOT_CONFIG || {};
   const apiUrl = String(config.apiUrl || "").replace(/\/$/, "");
   const siteUrl = String(config.siteUrl || "https://caocharles.github.io/ai-deploy-docs").replace(/\/$/, "");
-  const chatbotName = String(config.name || "部署筆記 AI 助理");
+  const chatbotName = String(config.name || "AI KM 筆記助理");
   const historyKey = "aiDeployDocsChatHistory";
   const sessionKey = "aiDeployDocsChatSession";
   const maxMessageChars = 4000;
@@ -57,7 +57,7 @@
       `<button id="ai-chat-open" aria-label="開啟 AI 助理">AI</button>
       <section id="ai-deploy-chatbot" aria-label="AI 助理聊天視窗">
         <header class="ai-chat-header">
-          <span><strong>${chatbotName}</strong><small>根據本站部署筆記回答</small></span>
+          <span><strong>${chatbotName}</strong><small>根據本站系統筆記回答</small></span>
           <div>
             <button id="ai-chat-clear" title="清除對話" aria-label="清除對話">↻</button>
             <button id="ai-chat-expand" title="切換全螢幕" aria-label="切換全螢幕">⛶</button>
@@ -66,7 +66,7 @@
         </header>
         <div id="ai-chat-messages" aria-live="polite"></div>
         <form id="ai-chat-form">
-          <input id="ai-chat-input" maxlength="${maxMessageChars}" autocomplete="off" placeholder="輸入部署問題…" aria-label="輸入問題">
+          <input id="ai-chat-input" maxlength="${maxMessageChars}" autocomplete="off" placeholder="輸入系統問題…" aria-label="輸入問題">
           <button id="ai-chat-send" type="submit" aria-label="送出問題">➤</button>
         </form>
       </section>`,
@@ -102,7 +102,7 @@
       if (history.length === 0) {
         appendMessage(
           "bot",
-          "嗨！我是部署筆記 AI 助理。你可以問我：\n\n- Cloud Run Service、Revision 和 Instance 有什麼差別？\n- GitHub Actions 如何把 API 部署到 Cloud Run？\n- Flask 為什麼搭配 Gunicorn？",
+          "嗨！我是 AI KM 筆記助理。你可以問我：\n\n- HTTP GET 和 POST 有什麼差別？\n- Flask 為什麼搭配 Gunicorn？\n- Cloud Run Service、Revision 和 Instance 有什麼差別？",
           false,
         );
         return;
@@ -202,4 +202,3 @@
     injectWidget();
   }
 })();
-

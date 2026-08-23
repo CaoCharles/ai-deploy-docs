@@ -244,7 +244,7 @@ rg -n "list_my_sessions|post_session_history|post_turn|is_service" \
 - 正式寫入只有 Frontend → Data API 一條路徑。
 - 畫面顯示回答與歷史成功保存是兩個不同結果，排錯時要分開確認。
 
-下一頁：[Deployment：程式碼如何上線](03_cicd_deployment_flow.md)。
+下一頁：[HTTP、GET、POST 與 Flask API](03_http_flask_api.md)。
 
 ## 延伸閱讀
 
