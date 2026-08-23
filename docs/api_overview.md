@@ -41,9 +41,9 @@ flowchart LR
 
 ## 建議閱讀順序
 
-1. [HTTP Request、GET、POST 與 REST API](03_http_flask_api.md)：先讀懂對外契約。
-2. [Flask、FastAPI、Gunicorn 與 Uvicorn](04_flask_wsgi_gunicorn_uvicorn.md)：理解程式如何成為正式服務。
-3. [一次 API 請求如何流動](02_runtime_request_flow.md)：把 Frontend、Model API 與 Data API 串起來。
+1. [HTTP Request、GET、POST 與 REST API](http_get_post_rest_api.md)：先讀懂對外契約。
+2. [Flask、FastAPI、Gunicorn 與 Uvicorn](flask_fastapi_gunicorn_uvicorn.md)：理解程式如何成為正式服務。
+3. [一次 API 請求如何流動](runtime_request_flow.md)：把 Frontend、Model API 與 Data API 串起來。
 4. [Cloud Run 學習路徑](cloud_run_overview.md)：理解 Container 上線後的執行環境。
 
 ## 實際專案案例

@@ -41,9 +41,9 @@ flowchart LR
 
 ## 建議閱讀順序
 
-1. [Service、Revision、Instance 與自動擴縮](04_cloud_run_core_concepts.md)
-2. [環境變數、GitHub Secrets 與 Secret Manager](05_configuration_and_secrets.md)
-3. [Flask、FastAPI、Gunicorn 與 Uvicorn](04_flask_wsgi_gunicorn_uvicorn.md)
+1. [Service、Revision、Instance 與自動擴縮](cloud_run_core_concepts.md)
+2. [環境變數、GitHub Secrets 與 Secret Manager](configuration_and_secrets.md)
+3. [Flask、FastAPI、Gunicorn 與 Uvicorn](flask_fastapi_gunicorn_uvicorn.md)
 4. [JMeter、TPS、延遲與壓力測試](jmeter_load_testing.md)
 
 ## 實際專案案例

@@ -51,7 +51,7 @@
 
     用一套 React、Flask、Cloud Run、Firebase Hosting 與 MongoDB 組成的系統，對照 Runtime 和 Deployment 如何銜接。
 
-    [:octicons-arrow-right-24: 查看架構案例](01_ai_asst_deployment_overview.md)
+    [:octicons-arrow-right-24: 查看架構案例](system_boundaries_and_deployment_flow.md)
 
 </div>
 
@@ -88,4 +88,4 @@ flowchart LR
 - 想知道 GitHub 為什麼能自動部署：閱讀 [CI/CD 學習路徑](cicd_overview.md)。
 - 正在操作 GCP：閱讀 [Cloud Run 學習路徑](cloud_run_overview.md)。
 - 想知道服務能承受多少流量：閱讀 [效能測試學習路徑](performance_overview.md)。
-- 想把所有元件串起來：最後看[實際架構案例](01_ai_asst_deployment_overview.md)。
+- 想把所有元件串起來：最後看[實際架構案例](system_boundaries_and_deployment_flow.md)。

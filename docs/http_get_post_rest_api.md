@@ -36,7 +36,7 @@ flowchart LR
 
 ## 前置知識
 
-可以先閱讀[一次 API 請求如何流動](02_runtime_request_flow.md)，能說出 Frontend、Model API 與 Data API 的責任即可。不需要先會寫 Flask。
+可以先閱讀[一次 API 請求如何流動](runtime_request_flow.md)，能說出 Frontend、Model API 與 Data API 的責任即可。不需要先會寫 Flask。
 
 ## 一個 API Request 到底包含什麼？
 
@@ -327,7 +327,7 @@ HTTP Method 是 Client 與 Data API 之間的協定；`find_one()`、`update_one
     Flask 是 Web Framework，也是 WSGI Application；正式環境還需要能接收連線並呼叫 Flask 的 WSGI Server。本系統使用 Gunicorn，可接著閱讀 Server 專題拆解它與 Flask 的責任。
 
 ??? question "Flask API 和 FastAPI 是同一個東西嗎？"
-    不是。Flask 與 FastAPI 是不同 Web Framework；目前正式系統使用 Flask。[Server 專題](04_flask_wsgi_gunicorn_uvicorn.md)會比較 Flask／FastAPI，以及常搭配的 Gunicorn／Uvicorn，但不會把比較方案誤寫成現行架構。
+    不是。Flask 與 FastAPI 是不同 Web Framework；目前正式系統使用 Flask。[Server 專題](flask_fastapi_gunicorn_uvicorn.md)會比較 Flask／FastAPI，以及常搭配的 Gunicorn／Uvicorn，但不會把比較方案誤寫成現行架構。
 
 ## 小結
 
@@ -337,7 +337,7 @@ HTTP Method 是 Client 與 Data API 之間的協定；`find_one()`、`update_one
 - HTTP Status Code 與 JSON `return_code` 是兩層不同的結果。
 - MongoDB 不直接接收瀏覽器的 HTTP Request；Data API 會把 Request 轉成 PyMongo 操作。
 
-接著閱讀：[Flask、FastAPI、Gunicorn 與 Uvicorn](04_flask_wsgi_gunicorn_uvicorn.md)。
+接著閱讀：[Flask、FastAPI、Gunicorn 與 Uvicorn](flask_fastapi_gunicorn_uvicorn.md)。
 
 ## 延伸閱讀
 

@@ -30,7 +30,7 @@ flowchart LR
 
 ## 前置知識
 
-建議先閱讀[GitHub Actions：從程式碼提交到 Cloud Run](03_cicd_deployment_flow.md)，知道 workflow 會 build、push Image 並執行 `gcloud run deploy`。
+建議先閱讀[GitHub Actions：從程式碼提交到 Cloud Run](github_actions_cloud_run_deployment.md)，知道 workflow 會 build、push Image 並執行 `gcloud run deploy`。
 
 ## 核心問題：部署後到底產生了什麼？
 
@@ -174,7 +174,7 @@ gcloud run services describe ai-asst-model-api \
 - Scale to zero 節省閒置成本，但可能帶來 Cold Start。
 - Model API 與 Data API 可以依工作特性使用不同資源設定。
 
-接著閱讀：[環境變數、GitHub Secrets 與 Secret Manager](05_configuration_and_secrets.md)。
+接著閱讀：[環境變數、GitHub Secrets 與 Secret Manager](configuration_and_secrets.md)。
 
 ## 延伸閱讀
 
