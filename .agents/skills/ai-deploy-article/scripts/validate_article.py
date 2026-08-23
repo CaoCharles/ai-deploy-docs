@@ -13,16 +13,7 @@ import yaml
 
 REQUIRED_FRONTMATTER = ("authors", "tags")
 GIT_MANAGED_FRONTMATTER = ("date", "updated")
-REQUIRED_HEADINGS = (
-    "學習目標",
-    "本章在整體架構的位置",
-    "前置知識",
-    "實際設定查證",
-    "Lab 實作練習",
-    "常見問題",
-    "小結",
-    "延伸閱讀",
-)
+REQUIRED_HEADINGS = ("學習目標", "延伸閱讀")
 SAFETY_LEVELS = ("本機實作", "雲端唯讀", "雲端寫入")
 SENSITIVE_PATTERNS = (
     ("private key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
@@ -67,28 +58,26 @@ def validate_text(text: str) -> list[str]:
     h1_lines = re.findall(r"^# (.+)$", body, flags=re.MULTILINE)
     if len(h1_lines) != 1:
         errors.append("文章必須只有一個 H1 標題")
-    elif not re.match(r"第\s*\d+\s*章[：:]", h1_lines[0]):
-        errors.append("H1 應使用 `第 N 章：章節名稱` 格式")
+    elif re.match(r"第\s*\d+\s*章[：:]", h1_lines[0]):
+        errors.append("H1 應使用主題名稱，不加 `第 N 章` 編號")
 
     h2_lines = set(re.findall(r"^## (.+?)\s*$", body, flags=re.MULTILINE))
     for heading in REQUIRED_HEADINGS:
         if heading not in h2_lines:
             errors.append(f"缺少必要章節 `## {heading}`")
 
-    if '!!! info "基礎觀念"' not in body:
-        errors.append('缺少 `!!! info "基礎觀念"` 區塊')
-    if '!!! example "ai-asst-km 實際做法"' not in body:
-        errors.append('缺少 `!!! example "ai-asst-km 實際做法"` 區塊')
-
-    if "| 查證項目 | 現行結論 | 來源 | 查證日期 |" not in body:
+    if "實際設定查證" in h2_lines and (
+        "| 查證項目 | 現行結論 | 來源 | 查證日期 |" not in body
+    ):
         errors.append("實際設定查證缺少標準來源表格")
 
     safety_match = re.search(
         r"\*\*安全等級\*\*[：:]\s*(本機實作|雲端唯讀|雲端寫入)", body
     )
-    if not safety_match:
+    has_lab = any(heading.startswith("Lab") for heading in h2_lines)
+    if has_lab and not safety_match:
         errors.append("Lab 缺少有效的 `安全等級` 標示")
-    elif safety_match.group(1) == "雲端寫入":
+    elif safety_match and safety_match.group(1) == "雲端寫入":
         for heading in ("影響", "復原方式"):
             if heading not in h2_lines and not re.search(
                 rf"^### {re.escape(heading)}\s*$", body, flags=re.MULTILINE

@@ -6,18 +6,18 @@ tags:
   - Overview
 ---
 
-# 第 1 章：先看懂系統邊界與兩條流程
+# 雲端 API 系統的邊界與部署流程
 
-這套系統同時存在「使用者正在使用服務」與「工程師正在發布版本」兩種流程。本章只負責建立全貌，後續章節再分別深入每一條路徑。
+這套系統同時存在「使用者正在使用服務」與「工程師正在發布版本」兩種流程。這篇只負責建立全貌，其他分類再分別深入每一條路徑。
 
 ## 學習目標
 
 - [ ] 分辨執行期（Runtime）與部署期（Deployment）。
 - [ ] 知道後續各頁分別要回答什麼問題。
 
-## 本章在整體架構的位置
+## 這篇筆記涵蓋的範圍
 
-本章是整套 AI KM 系統筆記的入口，先確認系統邊界，再把 Runtime 與 Deployment 分開；後續章節會依「系統全貌、服務啟動、CI/CD、GCP Cloud Run、資料與維運」逐一深入。
+這篇以 `ai-asst-km` 作為實際架構案例，示範如何辨認系統邊界，並把 Runtime 與 Deployment 分開閱讀。通用知識分別整理在 API、CI/CD、Cloud Run 與效能分類，不需要依章節編號閱讀。
 
 !!! info "這個系列討論什麼？"
     本系列記錄 `ai-asst-km` 的系統架構、API、服務啟動、資料邊界、測試、部署與維運，不討論 RAG、Prompt、知識檢索或員工 KM 內容。
@@ -26,19 +26,19 @@ tags:
 
 不需要先熟悉 GCP、Docker 或 CI/CD。閱讀時只要先問：「這個箭頭傳的是使用者請求，還是程式版本？」
 
-## 1.1 核心問題：兩條流程不要混在一起
+## Runtime 與 Deployment 是兩條不同流程
 
 | 流程 | 發生時機 | 主要參與者 | 要回答的問題 |
 |---|---|---|---|
 | Runtime（執行期） | 使用者開啟網頁並送出問題 | Browser、Frontend、Model API、Data API | 一次 HTTP 請求如何取得答案並保存紀錄？ |
 | Deployment（部署期） | 程式碼合併或手動發布時 | GitHub、GitHub Actions、Artifact Registry、Cloud Run | 新程式如何變成正式服務？ |
 
-## 1.2 基礎觀念
+## Runtime 與 Deployment 基礎觀念
 
 !!! info "基礎觀念"
     Runtime 關心已上線服務如何處理請求；Deployment 關心程式碼如何被測試、建置並發布。兩者發生在不同時間，也由不同元件負責。
 
-## 1.3 ai-asst-km 實際做法
+## 實際專案案例：ai-asst-km
 
 !!! example "ai-asst-km 實際做法"
     使用者請求會經過 React Frontend、Model API 與 Data API；新版本則由三個 GitHub Repository 的 Actions workflow 分別交付到 Cloud Run 或 Firebase Hosting。
@@ -136,8 +136,8 @@ rg -n "^name: Deploy" \
 
 ## 常見問題
 
-??? question "為什麼第一章沒有直接介紹 Cloud Run 的所有設定？"
-    第一章只建立全貌。Service、Revision、Instance、資源與擴縮會在第 7 章集中說明，避免同一頁同時承擔太多概念。
+??? question "為什麼這篇沒有直接介紹 Cloud Run 的所有設定？"
+    這篇只建立全貌。Service、Revision、Instance、資源與擴縮會在 Cloud Run 分類集中說明，避免同一頁同時承擔太多概念。
 
 ## 小結
 

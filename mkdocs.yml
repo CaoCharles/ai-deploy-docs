@@ -1,5 +1,5 @@
-site_name: AI KM 系統實戰筆記
-site_description: 從 ai-asst-km 系統架構、HTTP API 與服務啟動，到 CI/CD、GCP Cloud Run、設定與維運
+site_name: 雲端架構與 API 部署筆記
+site_description: 從 HTTP API、Python Web Server 與 Container，到 GitHub Actions、Cloud Run、負載測試與雲端模型容量規劃
 site_author: Charles Cao
 site_url: https://caocharles.github.io/ai-deploy-docs/
 copyright: Copyright &copy; 2026 Charles Cao - 筆記製作者
@@ -12,7 +12,7 @@ theme:
   language: zh-TW
   custom_dir: overrides
   icon:
-    logo: material/robot-outline
+    logo: material/cloud-outline
   palette:
     - scheme: default
       primary: deep purple
@@ -112,14 +112,22 @@ extra_javascript:
 
 nav:
   - 首頁: index.md
-  - AI KM 系統全貌:
-      - 01 系統邊界與兩條流程: 01_ai_asst_deployment_overview.md
-      - 02 Runtime 使用者請求如何流動: 02_runtime_request_flow.md
-  - 服務啟動基礎:
-      - 03 HTTP、GET、POST 與 Flask API: 03_http_flask_api.md
-      - 04 Flask、WSGI、Gunicorn 與 Uvicorn: 04_flask_wsgi_gunicorn_uvicorn.md
+  - API 與後端服務:
+      - API 學習路徑: api_overview.md
+      - HTTP Request、GET、POST 與 REST API: 03_http_flask_api.md
+      - Flask、FastAPI、Gunicorn 與 Uvicorn: 04_flask_wsgi_gunicorn_uvicorn.md
   - CI/CD 與交付:
-      - 06 程式碼如何上線: 03_cicd_deployment_flow.md
-  - GCP Cloud Run:
-      - 07 Service、Revision 與 Instance: 04_cloud_run_core_concepts.md
-      - 08 設定、環境變數與 Secret: 05_configuration_and_secrets.md
+      - CI/CD 學習路徑: cicd_overview.md
+      - GitHub Actions 到 Cloud Run: 03_cicd_deployment_flow.md
+      - Docker Image 與 Artifact Registry: docker_artifact_registry.md
+  - Cloud Run:
+      - Cloud Run 學習路徑: cloud_run_overview.md
+      - Service、Revision、Instance 與擴縮: 04_cloud_run_core_concepts.md
+      - 環境變數、Secrets 與 Secret Manager: 05_configuration_and_secrets.md
+  - 效能與容量:
+      - 效能測試學習路徑: performance_overview.md
+      - JMeter、TPS、延遲與壓力測試: jmeter_load_testing.md
+      - Azure OpenAI 的 TPM、RPM 與 429: azure_openai_quota.md
+  - 實際架構案例:
+      - 雲端 API 系統邊界與部署流程: 01_ai_asst_deployment_overview.md
+      - 一次 API 請求如何流動: 02_runtime_request_flow.md

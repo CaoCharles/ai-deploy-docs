@@ -8,11 +8,11 @@ tags:
   - REST
 ---
 
-# 第 3 章：HTTP、GET、POST 與 Flask API
+# HTTP Request、GET、POST 與 REST API
 
 使用者在網頁按下「送出」後，瀏覽器不是直接呼叫 Python 函式，也不是直接操作 MongoDB。它先組成一個 HTTP Request，送到指定的 API；Flask 再依照 Method 與 Path，把 Request 交給正確的處理函式。
 
-本章先看懂這一層公開介面。Gunicorn 的 workers、threads，以及 Flask／FastAPI、Gunicorn／Uvicorn 的比較，會留到下一章完整說明。
+這篇先看懂這一層公開介面。Gunicorn 的 workers、threads，以及 Flask／FastAPI、Gunicorn／Uvicorn 的比較，會在另一篇專題完整說明。
 
 ## 學習目標
 
@@ -22,7 +22,7 @@ tags:
 - [ ] 分辨 HTTP Status Code 與 JSON `return_code`。
 - [ ] 從正式分支程式碼找出 `ai-asst-km` 的主要 API 路徑。
 
-## 本章在整體架構的位置
+## 這篇筆記涵蓋的範圍
 
 ```mermaid
 flowchart LR
@@ -32,13 +32,13 @@ flowchart LR
     Route -->|"HTTP Response"| Browser
 ```
 
-本章聚焦在 HTTP Request 進入 Flask、再形成 HTTP Response 的過程。Gunicorn 如何接住連線，以及 Flask 函式後面如何操作 MongoDB，會在後續專章拆解。
+這篇聚焦在 HTTP Request 進入 Flask、再形成 HTTP Response 的過程。Gunicorn 如何接住連線，以及 Flask 函式後面如何操作 MongoDB，會在其他專題拆解。
 
 ## 前置知識
 
-先閱讀[第 2 章](02_runtime_request_flow.md)，能說出 Frontend、Model API 與 Data API 的責任即可。不需要先會寫 Flask。
+可以先閱讀[一次 API 請求如何流動](02_runtime_request_flow.md)，能說出 Frontend、Model API 與 Data API 的責任即可。不需要先會寫 Flask。
 
-## 3.1 一個 API Request 到底包含什麼？
+## 一個 API Request 到底包含什麼？
 
 以下是一個簡化後的問答請求：
 
@@ -83,7 +83,7 @@ Content-Type: application/json
 
 Response 也有 Header 與 Body，另外包含 HTTP Status Code。Frontend 會同時依 Status Code 與 JSON 內容判斷結果。
 
-## 3.2 GET、POST、PUT、DELETE 有什麼差別？
+## GET、POST、PUT、DELETE 有什麼差別？
 
 HTTP Method 表達「希望 Server 對目標資源做什麼」。它不是函式名稱，也不直接等於資料庫指令。
 
@@ -110,7 +110,7 @@ Data API 的 `POST /data-api/session-history` 是 Model API 專用的 server-to-
 
 OPTIONS 通過只代表瀏覽器允許送出真正的 Request；後續的 JWT 驗證仍然必須成功。
 
-## 3.3 Flask route 如何找到正確的 Python 函式？
+## Flask route 如何找到正確的 Python 函式？
 
 Flask 使用 Route 將「Path + Method」對應到 View Function。例如 Data API 的概念可以簡化成：
 
@@ -156,7 +156,7 @@ class ModelPredict(Resource):
 !!! example "ai-asst-km 實際做法"
     Model API 使用 Flask + Flask-RESTX 管理問答 Route 與輸出模型；Data API 使用 Flask `@app.route` 明確列出 GET、POST、PUT、DELETE 與 OPTIONS。兩者目前都不是 FastAPI。
 
-## 3.4 Flask 如何讀取 JSON Request？
+## Flask 如何讀取 JSON Request？
 
 常見流程可拆成五步：
 
@@ -198,7 +198,7 @@ if not isinstance(body, dict):
 
 不要把 Token 放在 Query String。URL 可能出現在瀏覽器紀錄、Proxy 或 Server Logs；本系統把 Bearer Token 放在 `Authorization` Header。
 
-## 3.5 HTTP Status Code 與 return_code 是兩層結果
+## HTTP Status Code 與 return_code 是兩層結果
 
 HTTP Status Code 描述這次 HTTP 交換的結果；Response Body 裡的 `return_code` 則是應用程式自己的業務欄位。
 
@@ -222,7 +222,7 @@ JSON return_message: "查無此對話"
 
 但 Model API 的回答信封可能在 HTTP `200` 中使用自己的 `return_code` 表達處理結果。因此排錯時應同時記錄 HTTP Status 與 Response Body，不能只看其中一個。
 
-## 3.6 `ai-asst-km` 的主要 API 地圖
+## `ai-asst-km` 的主要 API 地圖
 
 | 呼叫者 | Method 與 Path | 主要用途 | 是否可能寫入資料 |
 |---|---|---|---|
@@ -324,10 +324,10 @@ HTTP Method 是 Client 與 Data API 之間的協定；`find_one()`、`update_one
     `201 Created` 適合明確建立新資源；POST 也可能執行運算、附加資料或回傳處理結果，因此可以回 `200 OK`。本系統的 append turn 可能建立新 session，也可能更新既有 session，目前統一回 200 並在訊息中表達結果。
 
 ??? question "Flask 是 API Server 嗎？"
-    Flask 是 Web Framework，也是 WSGI Application；正式環境還需要能接收連線並呼叫 Flask 的 WSGI Server。本系統使用 Gunicorn，下一章會拆解它與 Flask 的責任。
+    Flask 是 Web Framework，也是 WSGI Application；正式環境還需要能接收連線並呼叫 Flask 的 WSGI Server。本系統使用 Gunicorn，可接著閱讀 Server 專題拆解它與 Flask 的責任。
 
 ??? question "Flask API 和 FastAPI 是同一個東西嗎？"
-    不是。Flask 與 FastAPI 是不同 Web Framework；目前正式系統使用 Flask。下一章會比較 Flask／FastAPI，以及常搭配的 Gunicorn／Uvicorn，但不會把比較方案誤寫成現行架構。
+    不是。Flask 與 FastAPI 是不同 Web Framework；目前正式系統使用 Flask。[Server 專題](04_flask_wsgi_gunicorn_uvicorn.md)會比較 Flask／FastAPI，以及常搭配的 Gunicorn／Uvicorn，但不會把比較方案誤寫成現行架構。
 
 ## 小結
 
@@ -337,7 +337,7 @@ HTTP Method 是 Client 與 Data API 之間的協定；`find_one()`、`update_one
 - HTTP Status Code 與 JSON `return_code` 是兩層不同的結果。
 - MongoDB 不直接接收瀏覽器的 HTTP Request；Data API 會把 Request 轉成 PyMongo 操作。
 
-下一頁：[Flask、WSGI、Gunicorn 與 Uvicorn](04_flask_wsgi_gunicorn_uvicorn.md)。
+接著閱讀：[Flask、FastAPI、Gunicorn 與 Uvicorn](04_flask_wsgi_gunicorn_uvicorn.md)。
 
 ## 延伸閱讀
 

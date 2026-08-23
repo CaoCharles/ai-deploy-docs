@@ -1,99 +1,91 @@
-# AI KM 系統實戰筆記
+# 雲端架構與 API 部署筆記
 
 <p class="hero-lead">
-以 `ai-asst-km` 的真實系統為主案例，從系統邊界、HTTP API 與服務啟動開始，逐步理解 Flask、Gunicorn、MongoDB、CI/CD、Google Cloud Run 與 Firebase Hosting，最後把 Runtime、Deployment 與維運流程串起來。
+這裡整理一套 Web API 從程式碼變成雲端服務時會遇到的知識：HTTP、Flask、FastAPI、Gunicorn、Uvicorn、Docker、GitHub Actions、Cloud Run、Secret、負載測試，以及 Azure OpenAI 的 TPM／RPM 容量限制。
 </p>
 
-[:material-rocket-launch: 從系統全貌開始](01_ai_asst_deployment_overview.md){ .md-button .md-button--primary }
+[:material-api: 從 API 基礎開始](api_overview.md){ .md-button .md-button--primary }
 
-!!! info "這份筆記的範圍"
-    本站聚焦於 **AI KM 系統的工程實作與維運知識**，包含 API、服務啟動、資料邊界、部署與 GCP。內容會對照 `ai-asst-km` 的實際架構，但不討論員工知識內容、RAG、Prompt 或內部資料。
+!!! info "這份筆記怎麼使用"
+    每個分類都可以獨立閱讀。通用觀念先講清楚，再用實際專案設定做案例；不必按照固定編號依序讀完，也不討論 RAG、Prompt 或內部知識內容。
 
-## 這套系統如何交付
-
-```mermaid
-flowchart LR
-    subgraph source["三個 GitHub Repository"]
-        ModelRepo["Model API"]
-        DataRepo["Data API"]
-        FrontRepo["React Frontend"]
-    end
-
-    subgraph cicd["GitHub Actions"]
-        Test["Test"] --> Build["Build"]
-    end
-
-    ModelRepo --> Test
-    DataRepo --> Test
-    ModelRepo --> Image["Docker Image"]
-    DataRepo --> Image
-    Image --> Registry["Artifact Registry"]
-    Registry --> Run["Cloud Run"]
-
-    FrontRepo --> FrontBuild["Vite Build"]
-    FrontBuild --> Hosting["Firebase Hosting"]
-```
-
-## 學習地圖
+## 學習分類
 
 <div class="grid cards" markdown>
 
--   :material-map-outline:{ .lg .middle } **AI KM 系統全貌**
+-   :material-api:{ .lg .middle } **API 與後端服務**
 
     ---
 
-    先分清系統邊界、Runtime 與 Deployment，認識三個 Repository 和外部服務的責任。
+    HTTP Request／Response、GET／POST、REST、Flask、FastAPI、WSGI、ASGI、Gunicorn workers 與 Uvicorn。
 
--   :material-server:{ .lg .middle } **服務啟動基礎**
-
-    ---
-
-    從 HTTP、Flask route、WSGI 與 Gunicorn，理解 Python API 如何成為可接收請求的服務。
+    [:octicons-arrow-right-24: 開始學習](api_overview.md)
 
 -   :material-source-branch:{ .lg .middle } **CI/CD 與交付**
 
     ---
 
-    看懂 GitHub Actions、Docker Image、Artifact Registry 與 Firebase Hosting 的交付路徑。
+    GitHub Actions trigger、job、step、Docker build、Artifact Registry、WIF 與 `gcloud run deploy`。
 
--   :material-google-cloud:{ .lg .middle } **GCP Cloud Run**
+    [:octicons-arrow-right-24: 查看部署流程](cicd_overview.md)
 
-    ---
-
-    理解 Service、Revision、Instance、擴縮、Secret、流量切換與回滾。
-
--   :material-database:{ .lg .middle } **資料與維運**
+-   :material-google-cloud:{ .lg .middle } **Cloud Run**
 
     ---
 
-    後續會補上 Data API、MongoDB 資料模型、Index、Logs、Health Check 與故障排查。
+    Service、Revision、Instance、concurrency、自動擴縮、Cold Start、timeout、環境變數與 Secret Manager。
+
+    [:octicons-arrow-right-24: 認識 Cloud Run](cloud_run_overview.md)
+
+-   :material-speedometer:{ .lg .middle } **效能與容量**
+
+    ---
+
+    JMeter threads、Ramp-up、TPS、Latency、P95／P99、錯誤率，以及 Azure OpenAI TPM／RPM 與 HTTP 429。
+
+    [:octicons-arrow-right-24: 開始效能測試](performance_overview.md)
+
+-   :material-sitemap-outline:{ .lg .middle } **實際架構案例**
+
+    ---
+
+    用一套 React、Flask、Cloud Run、Firebase Hosting 與 MongoDB 組成的系統，對照 Runtime 和 Deployment 如何銜接。
+
+    [:octicons-arrow-right-24: 查看架構案例](01_ai_asst_deployment_overview.md)
 
 </div>
 
-## 現行系統對照
+## 從一段程式碼到正式服務
 
-| 元件 | 現行技術 | 部署位置 |
-|---|---|---|
-| Model API | Flask + Gunicorn | Google Cloud Run |
-| Data API | Flask + Gunicorn | Google Cloud Run |
-| Web Frontend | React + Vite | Firebase Hosting |
-| Container Image | Docker Image | Artifact Registry |
-| CI/CD | GitHub Actions | GitHub |
-| 機密設定 | API Key、JWT、資料庫連線 | Secret Manager |
+```mermaid
+flowchart LR
+    Code["Python API 程式碼"] --> Server["Gunicorn 或 Uvicorn"]
+    Server --> Image["Docker Image"]
+    Commit["Push 到 GitHub"] --> Actions["GitHub Actions"]
+    Actions --> Image
+    Image --> Registry["Artifact Registry"]
+    Registry --> Run["Cloud Run Revision"]
+    Run --> Test["JMeter 與監控驗證"]
+    Run --> Model["Azure OpenAI"]
+    Test --> Capacity["TPS、P95、TPM、RPM"]
+```
 
-!!! tip "學習方式"
-    我們不會一次產生大量文章。每完成一章，就先在本機實作、驗證並確認內容，再加入下一章。
+這張圖就是本站的學習主線：先理解 API 怎麼接住 Request，再理解 Container 如何交付到 Cloud Run，最後用壓測與模型配額確認整條鏈路能承受多少流量。
 
-## 目前進度
+## 已整理的主題
 
-- [x] 第 1 章：系統邊界與 Runtime／Deployment
-- [x] 第 2 章：Runtime 使用者請求如何流動
-- [x] 第 3 章：HTTP、GET、POST 與 Flask API
-- [x] 第 4 章：Flask、WSGI、Gunicorn 與 Uvicorn
-- [ ] 第 5 章：Data API 與 MongoDB
-- [x] 第 6 章：GitHub Actions CI/CD 實際流程
-- [x] 第 7 章：GCP Cloud Run 核心概念
-- [x] 第 8 章：設定、環境變數與 Secret
+| 分類 | 目前文章 |
+|---|---|
+| API 與後端服務 | HTTP／REST、Flask／FastAPI、WSGI／ASGI、Gunicorn／Uvicorn |
+| CI/CD 與交付 | GitHub Actions、WIF、Docker Image、Artifact Registry、Cloud Run deploy trigger |
+| Cloud Run | Service、Revision、Instance、自動擴縮、concurrency、timeout、Secrets |
+| 效能與容量 | JMeter、TPS、Latency、Percentile、Azure OpenAI TPM／RPM／429 |
+| 實際架構案例 | 系統邊界、Runtime Request Flow、Frontend／Model API／Data API 分工 |
 
-!!! note "一章一章完成"
-    首頁只把後續主題當作學習方向，不會先生成大量 Markdown。每完成一章，我們會先在本機檢視與修正，再決定下一章。
+## 建議閱讀方式
+
+- 第一次接觸 Web API：從 [API 學習路徑](api_overview.md)開始。
+- 想知道 GitHub 為什麼能自動部署：閱讀 [CI/CD 學習路徑](cicd_overview.md)。
+- 正在操作 GCP：閱讀 [Cloud Run 學習路徑](cloud_run_overview.md)。
+- 想知道服務能承受多少流量：閱讀 [效能測試學習路徑](performance_overview.md)。
+- 想把所有元件串起來：最後看[實際架構案例](01_ai_asst_deployment_overview.md)。

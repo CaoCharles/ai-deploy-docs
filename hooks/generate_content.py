@@ -49,7 +49,7 @@ def on_post_build(config, **kwargs):
     runtime_config = {
         "apiUrl": api_url,
         "siteUrl": site_url,
-        "name": "AI KM 筆記助理",
+        "name": "雲端架構筆記助理",
     }
     config_path = site_dir / "assets" / "js" / "chatbot-config.js"
     config_path.parent.mkdir(parents=True, exist_ok=True)

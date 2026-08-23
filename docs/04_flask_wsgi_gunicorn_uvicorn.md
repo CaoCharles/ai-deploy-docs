@@ -9,11 +9,11 @@ tags:
   - FastAPI
 ---
 
-# 第 4 章：Flask、WSGI、Gunicorn 與 Uvicorn
+# Flask、FastAPI、Gunicorn 與 Uvicorn
 
-在第 3 章，我們看到 Flask 會依照 HTTP Method 與 Path 找到 Python 函式。但正式環境還有一個問題：HTTP Request 是誰先接住的？`workers`、`threads` 又是在控制什麼？
+理解 HTTP Method 與 Route 後，下一個問題是：HTTP Request 是誰先接住的？`workers`、`threads` 又是在控制什麼？
 
-本章會沿著 Cloud Run Instance 內部往下看，先拆解 `ai-asst-km` 現行的 Flask + Gunicorn，再比較 FastAPI + Uvicorn。這兩組名稱分屬不同層次，不能直接把四個工具放在同一列比較。
+這篇會沿著 Cloud Run Instance 內部往下看，先拆解 `ai-asst-km` 現行的 Flask + Gunicorn，再比較 FastAPI + Uvicorn。這兩組名稱分屬不同層次，不能直接把四個工具放在同一列比較。
 
 ## 學習目標
 
@@ -24,7 +24,7 @@ tags:
 - [ ] 說明 Cloud Run concurrency 與 Gunicorn 容量為什麼必須一起調整。
 - [ ] 正確比較 Flask／FastAPI，以及 Gunicorn／Uvicorn。
 
-## 本章在整體架構的位置
+## 這篇筆記涵蓋的範圍
 
 <figure markdown="span">
   ![ai-asst-km 正式環境中 Cloud Run、Gunicorn worker 與 Flask WSGI application 的 Deployment Diagram](assets/diagrams/04_cloud_run_gunicorn_flask_runtime.png)
@@ -35,14 +35,14 @@ tags:
 
 這是一張 **Deployment Diagram**，範圍是正式環境中兩支 API 的單一 Cloud Run Instance。閱讀順序由左至右：Cloud Run Ingress 收到 Request，交給 Instance 內的 Gunicorn master；master 管理 worker process，worker 再透過 WSGI 呼叫 Flask Application。
 
-圖中只畫「服務如何啟動與接住 Request」，沒有重複第 1 章的完整系統邊界，也沒有畫 Flask 函式後面的 Azure OpenAI 或 MongoDB 呼叫。
+圖中只畫「服務如何啟動與接住 Request」，不重複完整系統邊界，也沒有畫 Flask 函式後面的 Azure OpenAI 或 MongoDB 呼叫。
 
 ## 前置知識
 
-- 先閱讀[第 3 章](03_http_flask_api.md)，能辨認 Request、Method、Path 與 Flask route。
-- 若對 Cloud Run 的 Instance 還不熟，可以先快速閱讀[第 7 章](04_cloud_run_core_concepts.md)的 Service、Revision 與 Instance。
+- 先閱讀[HTTP Request、GET、POST 與 REST API](03_http_flask_api.md)，能辨認 Request、Method、Path 與 Flask route。
+- 若對 Cloud Run 的 Instance 還不熟，可以先快速閱讀[Cloud Run 的 Service、Revision 與 Instance](04_cloud_run_core_concepts.md)。
 
-## 4.1 為什麼正式環境不能只執行 `flask run`？
+## 為什麼正式環境不能只執行 `flask run`？
 
 Flask 內建的 Development Server 方便本機開發：啟動快、錯誤畫面清楚，也能搭配自動重新載入。但 Flask 官方明確說明，它不是為正式環境的安全性、穩定性與效率所設計。
 
@@ -57,7 +57,7 @@ Flask 內建的 Development Server 方便本機開發：啟動快、錯誤畫面
 !!! info "基礎觀念"
     Flask 負責 Route、Request、Response 與應用程式邏輯；Gunicorn 負責監聽連線及管理 worker。兩者是合作關係，不是二選一。
 
-## 4.2 先把四個技術層次拆開
+## 先把四個技術層次拆開
 
 一個 Python Web Request 會穿過幾個不同責任的層次：
 
@@ -91,7 +91,7 @@ ASGI（Asynchronous Server Gateway Interface）支援非同步呼叫與較長時
 
 但 `async def` 不是自動加速按鈕。只有當程式等待的資料庫 Client、HTTP Client 或其他函式也支援 `await`，event loop 才能在等待期間切去處理其他工作。若在 `async def` 中直接執行阻塞 I/O 或大量 CPU 運算，仍可能卡住 event loop。
 
-## 4.3 Gunicorn 的 master、worker 與 thread
+## Gunicorn 的 master、worker 與 thread
 
 Gunicorn 使用 pre-fork server model。啟動後，至少會看到兩類程序：
 
@@ -123,7 +123,7 @@ Master 不處理個別 Request。真正呼叫 Flask Application 的是 worker。
 !!! warning "不是越多越好"
     增加 workers 或 threads 都會消耗資源。設定必須用負載測試觀察吞吐量、延遲、記憶體、CPU 與錯誤率，而不是套用一條固定公式。
 
-## 4.4 逐段讀懂 `ai-asst-km` 的啟動命令
+## 逐段讀懂 `ai-asst-km` 的啟動命令
 
 ### Model API
 
@@ -168,9 +168,9 @@ CMD gunicorn -w 1 -k sync --timeout 60 \
 
 Data API 的單一 Instance 目前只有一個 Gunicorn Request 工作槽。它的 Request 通常較短，但仍需考慮 MongoDB 查詢、Connection Pool 與突發流量。
 
-## 4.5 Cloud Run concurrency 不是 Gunicorn concurrency
+## Cloud Run concurrency 不是 Gunicorn concurrency
 
-這是本章最容易混淆、也最重要的邊界：
+這是整個主題最容易混淆、也最重要的邊界：
 
 | 設定 | 控制者 | 控制的事情 |
 |---|---|---|
@@ -188,7 +188,7 @@ Google Cloud 建議 Cloud Run concurrency 不高於程式本身能穩定處理�
 | Data API | 80 | 1 sync worker | 1 | 平台上限高於 Application 工作槽；不一定立即出錯，但應用壓測確認排隊、延遲與擴縮行為 |
 
 !!! warning "這是容量檢查點，不是直接改設定的結論"
-    Data API 的 `80 對 1` 是目前可查證的設定差異。是否改成較低 Cloud Run concurrency、增加 Gunicorn workers，或改用 gthread，必須先測量 Request 延遲、MongoDB Connection Pool、CPU、記憶體與成本；本章不直接修改正式服務。
+    Data API 的 `80 對 1` 是目前可查證的設定差異。是否改成較低 Cloud Run concurrency、增加 Gunicorn workers，或改用 gthread，必須先測量 Request 延遲、MongoDB Connection Pool、CPU、記憶體與成本；這篇不直接修改正式服務。
 
 ### 兩層 timeout 也不相同
 
@@ -199,7 +199,7 @@ Google Cloud 建議 Cloud Run concurrency 不高於程式本身能穩定處理�
 
 Cloud Run timeout 是「Service 必須在多久內回傳 Response」；超過後 Client 會收到 `504`，但處理該 Request 的 Container 不會因此自動被終止。Gunicorn `timeout` 則是 master 判斷 worker 是否沉默的存活機制；尤其對 `gthread` 這類非 sync worker，它不是精準的單一 Request deadline。
 
-## 4.6 Flask vs FastAPI，Gunicorn vs Uvicorn
+## Flask vs FastAPI，Gunicorn vs Uvicorn
 
 ### Flask 與 FastAPI
 
@@ -282,7 +282,7 @@ Gunicorn 也能管理 ASGI worker，但 Uvicorn 官方已將舊的 `uvicorn.work
     Cloud Run concurrency = 100
     ```
 
-4. 對 Data API 記錄「workflow 沒有明確寫 concurrency」。若要確認正式服務的實際值，應使用第 7 章的雲端唯讀 `gcloud run services describe`，而不是直接猜預設值。
+4. 對 Data API 記錄「workflow 沒有明確寫 concurrency」。若要確認正式服務的實際值，應使用 Cloud Run 筆記中的雲端唯讀 `gcloud run services describe`，而不是直接猜預設值。
 
 ### 驗證結果
 
@@ -318,7 +318,7 @@ Gunicorn 也能管理 ASGI worker，但 Uvicorn 官方已將舊的 `uvicorn.work
 - Cloud Run concurrency 與 Gunicorn 工作槽是兩層設定，必須一起用壓測調整。
 - Timeout 也有平台、Application Server、程式與 Client 多層，最短的一層通常先影響使用者。
 
-下一章預計沿著 Data API 往後，說明 MongoDB 的資料模型、Connection Pool 與 Index。
+後續可以沿著 Data API 往後，繼續整理 MongoDB 的資料模型、Connection Pool 與 Index。
 
 ## 延伸閱讀
 

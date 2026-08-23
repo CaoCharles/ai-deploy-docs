@@ -8,11 +8,11 @@ tags:
   - Authentication
 ---
 
-# 第 2 章：Runtime 使用者請求如何流動
+# 一次 API 請求如何在前端與後端之間流動
 
-Runtime 是系統已經上線後，使用者操作網頁時真正發生的流程。本章追蹤一次提問如何穿過瀏覽器、Model API、Data API 與資料庫，也說明登入身分、歷史讀取與失敗時的邊界。
+Runtime 是系統已經上線後，使用者操作網頁時真正發生的流程。這篇追蹤一次提問如何穿過瀏覽器、Model API、Data API 與資料庫，也說明登入身分、歷史讀取與失敗時的邊界。
 
-HTTP Method、Flask route 與狀態碼會在後續 API 章節深入說明；本章先把元件分工和請求順序看懂。
+HTTP Method、Flask route 與狀態碼會在 API 分類深入說明；這裡先把元件分工和請求順序看懂。
 
 ## 學習目標
 
@@ -22,7 +22,7 @@ HTTP Method、Flask route 與狀態碼會在後續 API 章節深入說明；本�
 - [ ] 說明使用者 JWT 與 server-to-server service token 的差異。
 - [ ] 判斷 Model API 或 Data API 失敗時，畫面與歷史紀錄會發生什麼。
 
-## 本章在整體架構的位置
+## 這篇筆記涵蓋的範圍
 
 ```mermaid
 flowchart LR
@@ -33,13 +33,13 @@ flowchart LR
     Data --> Mongo["MongoDB Atlas"]
 ```
 
-本章只追蹤上圖的 Runtime 路徑。GitHub Actions、Docker build 與 Cloud Run deploy 屬於 Deployment，會留在後續章節。
+這篇只追蹤上圖的 Runtime 路徑。GitHub Actions、Docker build 與 Cloud Run deploy 屬於 Deployment，會放在 CI/CD 分類。
 
 ## 前置知識
 
-先閱讀[第 1 章](01_ai_asst_deployment_overview.md)，能分辨 Runtime 與 Deployment 即可。不需要先理解 RAG、向量資料庫或模型 Prompt。
+可以先閱讀[雲端 API 系統的邊界與部署流程](01_ai_asst_deployment_overview.md)，能分辨 Runtime 與 Deployment 即可。不需要先理解 RAG、向量資料庫或模型 Prompt。
 
-## 2.1 同一個畫面，其實跨越三個執行位置
+## 同一個畫面，其實跨越三個執行位置
 
 使用者看到的是一個聊天網站，但請求會跨越不同位置：
 
@@ -52,7 +52,7 @@ flowchart LR
 !!! info "基礎觀念"
     Hosting 是「把前端檔案送出去」，Browser 是「執行前端程式」，API Server 是「接收 HTTP 請求並執行後端邏輯」。三者可能一起構成同一個產品，但不是同一種服務。
 
-## 2.2 三個應用元件如何分工
+## 三個應用元件如何分工
 
 | 元件 | 現行技術 | 部署位置 | 主要責任 |
 |---|---|---|---|
@@ -63,7 +63,7 @@ flowchart LR
 !!! example "ai-asst-km 實際做法"
     Model API 只負責回答與唯讀歷史，不保存本輪對話；Data API 不產生回答，只管理聊天資料。正式寫入只有「Frontend → Data API」一條路徑，避免同一輪被重複保存。
 
-## 2.3 登入後，每個 API 請求如何證明身分
+## 登入後，每個 API 請求如何證明身分
 
 使用者先向 Model API 的登入端點送出員工編號與密碼。登入成功後，Frontend 將 JSON Web Token（JWT）保存在瀏覽器的 `localStorage`。
 
@@ -89,7 +89,7 @@ Model API 呼叫 Data API 的 `POST /data-api/session-history` 時使用 server-
 | Browser → Model API／Data API | 使用者 JWT | 問答及本人 session 的讀寫 |
 | Model API → Data API | Service token | 唯讀 session history |
 
-## 2.4 一次提問的五個主要步驟
+## 一次提問的五個主要步驟
 
 ```mermaid
 sequenceDiagram
@@ -127,7 +127,7 @@ Frontend 不會把整包聊天歷史重新塞進 Request。Model API 依 `sessio
 
 Model API 使用 service token 查詢 Data API，現行設定最多回放最近 5 輪。若是第一次提問，Data API 可能回傳 `404`；Model API 會把它視為「尚無紀錄」，不是系統故障。
 
-本章不展開 Model API 內部如何產生回答，只要先掌握：歷史由 Data API 提供，Model API 不直接讀寫 MongoDB。
+這篇不展開 Model API 內部如何產生回答，只要先掌握：歷史由 Data API 提供，Model API 不直接讀寫 MongoDB。
 
 ### 步驟 4：Model API 回傳回答信封
 
@@ -145,7 +145,7 @@ Frontend 使用這個信封建立畫面上的助理訊息。
 
 Data API 再把本輪 append 到 MongoDB Atlas 的 session history。這個保存呼叫採非同步處理，因此回答可以先顯示；若保存失敗，畫面仍可能看得到回答，但重新載入後找不到該輪紀錄。
 
-## 2.5 歷史如何載入，又如何避免一直下載整包資料
+## 歷史如何載入，又如何避免一直下載整包資料
 
 除了送出問題，Frontend 還有三種讀取方式：
 
@@ -159,7 +159,7 @@ Data API 再把本輪 append 到 MongoDB Atlas 的 session history。這個保�
 
 這個設計把「有沒有變」和「把全部資料拿回來」拆開，可減少 Cloud Run 請求內容與網路傳輸量。
 
-## 2.6 失敗時，哪一段會受到影響？
+## 失敗時，哪一段會受到影響？
 
 | 失敗位置 | 使用者看到什麼 | 是否寫入本輪歷史 |
 |---|---|---|
@@ -244,7 +244,7 @@ rg -n "list_my_sessions|post_session_history|post_turn|is_service" \
 - 正式寫入只有 Frontend → Data API 一條路徑。
 - 畫面顯示回答與歷史成功保存是兩個不同結果，排錯時要分開確認。
 
-下一頁：[HTTP、GET、POST 與 Flask API](03_http_flask_api.md)。
+接著閱讀：[HTTP Request、GET、POST 與 REST API](03_http_flask_api.md)。
 
 ## 延伸閱讀
 
