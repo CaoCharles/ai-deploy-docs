@@ -6,7 +6,7 @@ tags:
   - Overview
 ---
 
-# 第 1 章：部署前，先看懂兩條流程
+# 第 1 章：先看懂系統邊界與兩條流程
 
 這套系統同時存在「使用者正在使用服務」與「工程師正在發布版本」兩種流程。本章只負責建立全貌，後續章節再分別深入每一條路徑。
 
@@ -17,10 +17,10 @@ tags:
 
 ## 本章在整體架構的位置
 
-本章是整套部署筆記的入口，先把 Runtime 與 Deployment 分開；後續章節再沿著各自的箭頭逐一深入。
+本章是整套 AI KM 系統筆記的入口，先確認系統邊界，再把 Runtime 與 Deployment 分開；後續章節會依「系統全貌、服務啟動、CI/CD、GCP Cloud Run、資料與維運」逐一深入。
 
 !!! info "這個系列討論什麼？"
-    本系列記錄 `ai-asst-km` 如何開發、測試與部署，不討論 RAG、Prompt、知識檢索或員工 KM 內容。
+    本系列記錄 `ai-asst-km` 的系統架構、API、服務啟動、資料邊界、測試、部署與維運，不討論 RAG、Prompt、知識檢索或員工 KM 內容。
 
 ## 前置知識
 
@@ -80,12 +80,14 @@ flowchart TB
 
 上方 C4 圖的箭頭代表 HTTP 請求與資料流；這張 Mermaid 的箭頭代表程式版本與建置產物的交付。先分清箭頭屬於哪一類，後面的服務就不容易混在一起。
 
-## 系列閱讀順序
+## 分類與閱讀順序
 
 1. [Runtime：使用者請求如何流動](02_runtime_request_flow.md)：Frontend、Model API 與 Data API 如何合作。
-2. [Deployment：程式碼如何上線](03_cicd_deployment_flow.md)：三個 Repository 的 GitHub Actions 交付流程。
-3. [Cloud Run：Service、Revision、Instance](04_cloud_run_core_concepts.md)：程式部署後在 GCP 如何執行。
-4. [設定、環境變數與 Secret](05_configuration_and_secrets.md)：公開設定、機密資料與線上設定放在哪裡。
+2. [HTTP、GET、POST 與 Flask API](03_http_flask_api.md)：Request 如何進入 Flask route 並形成 Response。
+3. 「服務啟動基礎」接著說明 Gunicorn 執行架構；「資料與維運」則說明 MongoDB 資料層。
+4. [Deployment：程式碼如何上線](03_cicd_deployment_flow.md)：三個 Repository 的 GitHub Actions 交付流程。
+5. [Cloud Run：Service、Revision、Instance](04_cloud_run_core_concepts.md)：程式部署後在 GCP 如何執行。
+6. [設定、環境變數與 Secret](05_configuration_and_secrets.md)：公開設定、機密資料與線上設定放在哪裡。
 
 ## 先記住這四個角色
 
@@ -135,13 +137,13 @@ rg -n "^name: Deploy" \
 ## 常見問題
 
 ??? question "為什麼第一章沒有直接介紹 Cloud Run 的所有設定？"
-    第一章只建立全貌。Service、Revision、Instance、資源與擴縮會在第 4 章集中說明，避免同一頁同時承擔太多概念。
+    第一章只建立全貌。Service、Revision、Instance、資源與擴縮會在第 7 章集中說明，避免同一頁同時承擔太多概念。
 
 ## 小結
 
 - Runtime 描述使用者請求。
 - Deployment 描述程式版本交付。
-- 後續每一頁只深入處理其中一個問題。
+- 後續文章依系統全貌、服務啟動、CI/CD、GCP Cloud Run 與資料維運分類，每頁只深入一個問題。
 
 ## 延伸閱讀
 

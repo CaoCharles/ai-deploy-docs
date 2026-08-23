@@ -1,5 +1,5 @@
-site_name: AI 應用部署實戰筆記
-site_description: 從 Python API、Gunicorn 與 Docker，一路理解 GitHub Actions、Artifact Registry 和 Google Cloud Run
+site_name: AI KM 系統實戰筆記
+site_description: 從 ai-asst-km 系統架構、HTTP API 與服務啟動，到 CI/CD、GCP Cloud Run、設定與維運
 site_author: Charles Cao
 site_url: https://caocharles.github.io/ai-deploy-docs/
 copyright: Copyright &copy; 2026 Charles Cao - 筆記製作者
@@ -12,7 +12,7 @@ theme:
   language: zh-TW
   custom_dir: overrides
   icon:
-    logo: material/cloud-upload
+    logo: material/robot-outline
   palette:
     - scheme: default
       primary: deep purple
@@ -104,6 +104,7 @@ extra_css:
   - assets/css/chatbot.css
 
 extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mermaid@11.17.0/dist/mermaid.min.js
   - https://cdn.jsdelivr.net/npm/marked/marked.min.js
   - https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js
   - assets/js/chatbot-config.js
@@ -111,9 +112,13 @@ extra_javascript:
 
 nav:
   - 首頁: index.md
-  - AI 系統部署架構:
-      - 01 部署前，先看懂兩條流程: 01_ai_asst_deployment_overview.md
+  - AI KM 系統全貌:
+      - 01 系統邊界與兩條流程: 01_ai_asst_deployment_overview.md
       - 02 Runtime 使用者請求如何流動: 02_runtime_request_flow.md
-      - 03 Deployment 程式碼如何上線: 03_cicd_deployment_flow.md
-      - 04 Cloud Run 核心概念: 04_cloud_run_core_concepts.md
-      - 05 設定、環境變數與 Secret: 05_configuration_and_secrets.md
+  - 服務啟動基礎:
+      - 03 HTTP、GET、POST 與 Flask API: 03_http_flask_api.md
+  - CI/CD 與交付:
+      - 06 程式碼如何上線: 03_cicd_deployment_flow.md
+  - GCP Cloud Run:
+      - 07 Service、Revision 與 Instance: 04_cloud_run_core_concepts.md
+      - 08 設定、環境變數與 Secret: 05_configuration_and_secrets.md
