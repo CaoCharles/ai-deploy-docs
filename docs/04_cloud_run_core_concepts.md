@@ -7,7 +7,7 @@ tags:
   - Container
 ---
 
-# 第 7 章：Cloud Run 的 Service、Revision、Instance
+# Cloud Run：Service、Revision、Instance 與自動擴縮
 
 GitHub Actions 把 Image 推送到 Artifact Registry 後，會執行 `gcloud run deploy`。從這一步開始，程式版本會由 Cloud Run 負責執行與擴縮。
 
@@ -17,7 +17,7 @@ GitHub Actions 把 Image 推送到 Artifact Registry 後，會執行 `gcloud run
 - [ ] 理解部署、流量、擴縮與 Cold Start 的關係。
 - [ ] 使用唯讀指令查看兩支 API 的部署狀態。
 
-## 本章在整體架構的位置
+## 這篇筆記涵蓋的範圍
 
 ```mermaid
 flowchart LR
@@ -26,22 +26,22 @@ flowchart LR
     Revision --> Instance["Container Instance"]
 ```
 
-本章從 Image 已經進入 Artifact Registry 的位置開始，說明 Cloud Run 如何把它變成可接收 HTTPS 請求的服務。
+這篇從 Image 已經進入 Artifact Registry 的位置開始，說明 Cloud Run 如何把它變成可接收 HTTPS 請求的服務。
 
 ## 前置知識
 
-建議先閱讀[第 6 章](03_cicd_deployment_flow.md)，知道 GitHub Actions 會 build、push Image 並執行 `gcloud run deploy`。
+建議先閱讀[GitHub Actions：從程式碼提交到 Cloud Run](03_cicd_deployment_flow.md)，知道 workflow 會 build、push Image 並執行 `gcloud run deploy`。
 
-## 7.1 核心問題：部署後到底產生了什麼？
+## 核心問題：部署後到底產生了什麼？
 
 部署目標不是某一台固定主機，而是一個 Cloud Run Service；Service 透過 Revision 保存版本，並由動態建立的 Instance 執行 Container。
 
-## 7.2 基礎觀念
+## 基礎觀念
 
 !!! info "基礎觀念"
     Service 是穩定入口，Revision 是不可變版本，Instance 是實際運算單位。Cloud Run 可以將 Service 流量導向不同 Revision，並依請求量調整 Instance 數量。
 
-## 7.3 ai-asst-km 實際做法
+## ai-asst-km 實際做法
 
 !!! example "ai-asst-km 實際做法"
     Model API 與 Data API 各自是一個 Cloud Run Service。每次 deploy workflow 提交新的 Image 與設定時，Cloud Run 建立對應 Revision；兩個 Service 都允許無流量時縮到零。
@@ -174,7 +174,7 @@ gcloud run services describe ai-asst-model-api \
 - Scale to zero 節省閒置成本，但可能帶來 Cold Start。
 - Model API 與 Data API 可以依工作特性使用不同資源設定。
 
-下一頁：[設定、環境變數與 Secret](05_configuration_and_secrets.md)。
+接著閱讀：[環境變數、GitHub Secrets 與 Secret Manager](05_configuration_and_secrets.md)。
 
 ## 延伸閱讀
 

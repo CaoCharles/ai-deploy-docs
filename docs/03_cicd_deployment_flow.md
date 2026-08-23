@@ -7,7 +7,7 @@ tags:
   - Artifact Registry
 ---
 
-# 第 6 章：Deployment 程式碼如何上線
+# GitHub Actions：從程式碼提交到 Cloud Run
 
 Deployment 是工程師把新版本交付到正式環境的流程。`ai-asst-km` 的三個主要 Repository 都使用 GitHub Actions，但 API 與前端的部署產物不同。
 
@@ -18,7 +18,7 @@ Deployment 是工程師把新版本交付到正式環境的流程。`ai-asst-km`
 - [ ] 說明前端為什麼部署到 Firebase Hosting。
 - [ ] 理解 Workload Identity Federation（WIF）在流程中的位置。
 
-## 本章在整體架構的位置
+## 這篇筆記涵蓋的範圍
 
 ```mermaid
 flowchart LR
@@ -26,22 +26,22 @@ flowchart LR
     Actions --> Target["Cloud Run 或 Firebase Hosting"]
 ```
 
-本章涵蓋從 Git commit 到雲端部署目標的交付箭頭，不討論使用者送出問題後的 Runtime 流程。
+這篇涵蓋從 Git commit 到雲端部署目標的交付箭頭，不討論使用者送出問題後的 Runtime 流程。
 
 ## 前置知識
 
 先理解 Repository、commit 與 branch 的基本概念；不需要先會撰寫 GitHub Actions YAML。
 
-## 6.1 核心問題：三個 Repository 交付什麼？
+## 核心問題：三個 Repository 交付什麼？
 
 兩支 API 交付可執行的 Container Image，Frontend 則交付瀏覽器可下載的靜態網站檔案。
 
-## 6.2 基礎觀念
+## 基礎觀念
 
 !!! info "基礎觀念"
     CI 回答「這次修改能否通過檢查與建置」；CD 回答「通過檢查的版本如何交付」。CI/CD 是自動化流程，不是實際長期執行 API 的平台。
 
-## 6.3 ai-asst-km 實際做法
+## ai-asst-km 實際做法
 
 !!! example "ai-asst-km 實際做法"
     三個 Repository 都有 CI 與 deploy workflow。Model API、Data API build Docker Image 並部署 Cloud Run；Frontend 執行 Vite build 後發布 Firebase Hosting。
@@ -177,7 +177,7 @@ Deploy (Firebase Hosting)    active
 - WIF 提供 GitHub Actions 到 GCP 的短效身分。
 - Artifact Registry 保存 Image；真正執行 Image 的是 Cloud Run。
 
-下一頁：[Cloud Run：Service、Revision、Instance](04_cloud_run_core_concepts.md)。
+接著閱讀：[Cloud Run：Service、Revision、Instance 與自動擴縮](04_cloud_run_core_concepts.md)。
 
 ## 延伸閱讀
 
