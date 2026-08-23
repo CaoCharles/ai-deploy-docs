@@ -43,10 +43,10 @@ flowchart LR
 
 ## 建議閱讀順序
 
-1. [GitHub Actions：從程式碼提交到 Cloud Run](03_cicd_deployment_flow.md)
+1. [GitHub Actions：從程式碼提交到 Cloud Run](github_actions_cloud_run_deployment.md)
 2. [Docker Image 與 Artifact Registry](docker_artifact_registry.md)
 3. [Cloud Run 學習路徑](cloud_run_overview.md)
-4. [環境變數、GitHub Secrets 與 Secret Manager](05_configuration_and_secrets.md)
+4. [環境變數、GitHub Secrets 與 Secret Manager](configuration_and_secrets.md)
 
 ## 實際專案案例
 

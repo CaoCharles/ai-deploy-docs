@@ -37,7 +37,7 @@ flowchart LR
 
 ## 前置知識
 
-可以先閱讀[雲端 API 系統的邊界與部署流程](01_ai_asst_deployment_overview.md)，能分辨 Runtime 與 Deployment 即可。不需要先理解 RAG、向量資料庫或模型 Prompt。
+可以先閱讀[雲端 API 系統的邊界與部署流程](system_boundaries_and_deployment_flow.md)，能分辨 Runtime 與 Deployment 即可。不需要先理解 RAG、向量資料庫或模型 Prompt。
 
 ## 同一個畫面，其實跨越三個執行位置
 
@@ -244,7 +244,7 @@ rg -n "list_my_sessions|post_session_history|post_turn|is_service" \
 - 正式寫入只有 Frontend → Data API 一條路徑。
 - 畫面顯示回答與歷史成功保存是兩個不同結果，排錯時要分開確認。
 
-接著閱讀：[HTTP Request、GET、POST 與 REST API](03_http_flask_api.md)。
+接著閱讀：[HTTP Request、GET、POST 與 REST API](http_get_post_rest_api.md)。
 
 ## 延伸閱讀
 

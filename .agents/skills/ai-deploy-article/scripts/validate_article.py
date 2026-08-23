@@ -95,11 +95,16 @@ def validate_text(text: str) -> list[str]:
 
 
 def validate_file(path: Path) -> list[str]:
+    errors: list[str] = []
+    if re.match(r"^\d+[_-]", path.name):
+        errors.append("Markdown 檔名應使用主題名稱，不加數字序號前綴")
+
     try:
         text = path.read_text(encoding="utf-8")
     except OSError as exc:
-        return [f"無法讀取檔案：{exc}"]
-    return validate_text(text)
+        errors.append(f"無法讀取檔案：{exc}")
+        return errors
+    return errors + validate_text(text)
 
 
 def main() -> int:

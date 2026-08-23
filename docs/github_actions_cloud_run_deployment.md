@@ -177,7 +177,7 @@ Deploy (Firebase Hosting)    active
 - WIF 提供 GitHub Actions 到 GCP 的短效身分。
 - Artifact Registry 保存 Image；真正執行 Image 的是 Cloud Run。
 
-接著閱讀：[Cloud Run：Service、Revision、Instance 與自動擴縮](04_cloud_run_core_concepts.md)。
+接著閱讀：[Cloud Run：Service、Revision、Instance 與自動擴縮](cloud_run_core_concepts.md)。
 
 ## 延伸閱讀
 

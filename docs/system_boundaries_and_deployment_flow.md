@@ -82,12 +82,12 @@ flowchart TB
 
 ## 分類與閱讀順序
 
-1. [Runtime：使用者請求如何流動](02_runtime_request_flow.md)：Frontend、Model API 與 Data API 如何合作。
-2. [HTTP、GET、POST 與 Flask API](03_http_flask_api.md)：Request 如何進入 Flask route 並形成 Response。
+1. [Runtime：使用者請求如何流動](runtime_request_flow.md)：Frontend、Model API 與 Data API 如何合作。
+2. [HTTP、GET、POST 與 Flask API](http_get_post_rest_api.md)：Request 如何進入 Flask route 並形成 Response。
 3. 「服務啟動基礎」接著說明 Gunicorn 執行架構；「資料與維運」則說明 MongoDB 資料層。
-4. [Deployment：程式碼如何上線](03_cicd_deployment_flow.md)：三個 Repository 的 GitHub Actions 交付流程。
-5. [Cloud Run：Service、Revision、Instance](04_cloud_run_core_concepts.md)：程式部署後在 GCP 如何執行。
-6. [設定、環境變數與 Secret](05_configuration_and_secrets.md)：公開設定、機密資料與線上設定放在哪裡。
+4. [Deployment：程式碼如何上線](github_actions_cloud_run_deployment.md)：三個 Repository 的 GitHub Actions 交付流程。
+5. [Cloud Run：Service、Revision、Instance](cloud_run_core_concepts.md)：程式部署後在 GCP 如何執行。
+6. [設定、環境變數與 Secret](configuration_and_secrets.md)：公開設定、機密資料與線上設定放在哪裡。
 
 ## 先記住這四個角色
 

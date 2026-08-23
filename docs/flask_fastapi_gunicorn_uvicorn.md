@@ -39,8 +39,8 @@ tags:
 
 ## 前置知識
 
-- 先閱讀[HTTP Request、GET、POST 與 REST API](03_http_flask_api.md)，能辨認 Request、Method、Path 與 Flask route。
-- 若對 Cloud Run 的 Instance 還不熟，可以先快速閱讀[Cloud Run 的 Service、Revision 與 Instance](04_cloud_run_core_concepts.md)。
+- 先閱讀[HTTP Request、GET、POST 與 REST API](http_get_post_rest_api.md)，能辨認 Request、Method、Path 與 Flask route。
+- 若對 Cloud Run 的 Instance 還不熟，可以先快速閱讀[Cloud Run 的 Service、Revision 與 Instance](cloud_run_core_concepts.md)。
 
 ## 為什麼正式環境不能只執行 `flask run`？
 

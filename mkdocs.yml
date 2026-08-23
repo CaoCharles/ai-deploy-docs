@@ -114,20 +114,20 @@ nav:
   - 首頁: index.md
   - API 與後端服務:
       - API 學習路徑: api_overview.md
-      - HTTP Request、GET、POST 與 REST API: 03_http_flask_api.md
-      - Flask、FastAPI、Gunicorn 與 Uvicorn: 04_flask_wsgi_gunicorn_uvicorn.md
+      - HTTP Request、GET、POST 與 REST API: http_get_post_rest_api.md
+      - Flask、FastAPI、Gunicorn 與 Uvicorn: flask_fastapi_gunicorn_uvicorn.md
   - CI/CD 與交付:
       - CI/CD 學習路徑: cicd_overview.md
-      - GitHub Actions 到 Cloud Run: 03_cicd_deployment_flow.md
+      - GitHub Actions 到 Cloud Run: github_actions_cloud_run_deployment.md
       - Docker Image 與 Artifact Registry: docker_artifact_registry.md
   - Cloud Run:
       - Cloud Run 學習路徑: cloud_run_overview.md
-      - Service、Revision、Instance 與擴縮: 04_cloud_run_core_concepts.md
-      - 環境變數、Secrets 與 Secret Manager: 05_configuration_and_secrets.md
+      - Service、Revision、Instance 與擴縮: cloud_run_core_concepts.md
+      - 環境變數、Secrets 與 Secret Manager: configuration_and_secrets.md
   - 效能與容量:
       - 效能測試學習路徑: performance_overview.md
       - JMeter、TPS、延遲與壓力測試: jmeter_load_testing.md
       - Azure OpenAI 的 TPM、RPM 與 429: azure_openai_quota.md
   - 實際架構案例:
-      - 雲端 API 系統邊界與部署流程: 01_ai_asst_deployment_overview.md
-      - 一次 API 請求如何流動: 02_runtime_request_flow.md
+      - 雲端 API 系統邊界與部署流程: system_boundaries_and_deployment_flow.md
+      - 一次 API 請求如何流動: runtime_request_flow.md

@@ -42,8 +42,8 @@ flowchart LR
 
 1. [JMeter、TPS、延遲與壓力測試](jmeter_load_testing.md)
 2. [Azure OpenAI 的 TPM、RPM 與 HTTP 429](azure_openai_quota.md)
-3. [Flask、FastAPI、Gunicorn 與 Uvicorn](04_flask_wsgi_gunicorn_uvicorn.md)
-4. [Cloud Run：Service、Revision、Instance 與自動擴縮](04_cloud_run_core_concepts.md)
+3. [Flask、FastAPI、Gunicorn 與 Uvicorn](flask_fastapi_gunicorn_uvicorn.md)
+4. [Cloud Run：Service、Revision、Instance 與自動擴縮](cloud_run_core_concepts.md)
 
 ## 實際專案案例
 

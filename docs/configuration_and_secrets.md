@@ -32,7 +32,7 @@ flowchart LR
 
 ## 前置知識
 
-建議先理解[GitHub Actions 部署流程](03_cicd_deployment_flow.md)與[Cloud Run Revision](04_cloud_run_core_concepts.md)。
+建議先理解[GitHub Actions 部署流程](github_actions_cloud_run_deployment.md)與[Cloud Run Revision](cloud_run_core_concepts.md)。
 
 ## 核心問題：哪些資料可以公開？
 
