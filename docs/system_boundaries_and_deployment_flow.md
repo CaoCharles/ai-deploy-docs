@@ -108,32 +108,6 @@ GitHub Actions 不負責長期執行 API，Artifact Registry 也不會回應使�
 | Data API 執行位置 | Cloud Run | `ai-asst-data-api/.github/workflows/deploy.yml` | 2026-08-21 |
 | Frontend 發布位置 | Firebase Hosting | `ai-asst-frontend/.github/workflows/deploy.yml` | 2026-08-21 |
 
-## Lab 實作練習
-
-**安全等級**：本機實作
-
-### 目標
-
-在本機程式碼中找出三條部署流程，確認架構圖不是抽象示例。
-
-### 環境需求
-
-本機已有 `ai-asst-km` 三個主要 Repository，並在 `ai-asst-km` 根目錄執行以下指令。
-
-### 步驟
-
-```bash title="找出三個部署 workflow"
-rg -n "^name: Deploy" \
-  ai-asst-model-api/.github/workflows/deploy.yml \
-  ai-asst-data-api/.github/workflows/deploy.yml \
-  ai-asst-frontend/.github/workflows/deploy.yml
-```
-
-### 驗證結果
-
-- [ ] Model API 與 Data API 顯示 `Deploy (Cloud Run)`。
-- [ ] Frontend 顯示 `Deploy (Firebase Hosting)`。
-
 ## 常見問題
 
 ??? question "為什麼這篇沒有直接介紹 Cloud Run 的所有設定？"

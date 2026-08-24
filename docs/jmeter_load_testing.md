@@ -91,34 +91,17 @@ Error Rate = 失敗樣本數 ÷ 全部樣本數 × 100%
 | 認證 | 每個 Thread 登入一次並擷取 access token | Once Only Controller／JSON Extractor | 2026-08-23 |
 | 成功判斷 | HTTP Status 與 JSON 結果都要通過 | Response／JSON Assertions | 2026-08-23 |
 
-## Lab：安全閱讀 Test Plan
-
-**安全等級**：本機實作
-
-```bash
-rg -n 'ThreadGroup.num_threads|ThreadGroup.ramp_time|LoopController.loops|response_timeout' \
-  ai-asst-model-api-loadtest/model_api_external_loadtest.jmx
-```
-
-### 驗證結果
-
-- [ ] 能計算預設最多會產生幾次問答 Request。
-- [ ] 能指出 Login 與 Model Request 的成功 Assertions。
-- [ ] 沒有執行 JMeter，也沒有把帳密寫進 `.jmx`。
-
-## 正式壓測的安全邊界
-
-**安全等級**：雲端寫入
+## 正式壓測的風險邊界
 
 執行正式 `.jmx` 會產生真實 API 流量、Azure OpenAI 費用、Cloud Run Instance 與 Logs；必須先獲得團隊同意，並透過 JMeter properties 注入帳密，不能直接寫回 Test Plan。
 
-### 影響
+### 可能影響
 
 - 可能消耗 Azure OpenAI TPM／RPM 並收到 HTTP 429。
 - 可能將 Cloud Run 擴張到 Max instances，增加費用。
 - 可能影響同時間的正式使用者與資料庫 Connection Pool。
 
-### 復原方式
+### 測試後恢復觀察
 
 停止 JMeter 後不需修改正式設定；等待進行中的 Request 完成，確認 Cloud Run Instance 回落、錯誤率恢復，再保存 JTL、Cloud Run Metrics 與測試版本供比較。若測試引發持續異常，依維運流程回滾 Revision 或暫停測試來源。
 

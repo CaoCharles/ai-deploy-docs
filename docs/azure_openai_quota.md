@@ -95,9 +95,7 @@ flowchart LR
 | 正式 TPM／RPM | 未寫入 Repository，必須由 Azure 唯讀查詢 | 待 Azure Deployment 權限確認 | 2026-08-23 |
 | 壓測影響 | JMeter 問答會產生真實模型流量與費用 | Model API load-test Test Plan | 2026-08-23 |
 
-## Lab：做容量紙上估算
-
-**安全等級**：本機實作
+## 容量估算範例
 
 假設測試觀察到平均每次模型處理 2,000 個 Tokens，而某測試環境配置 120,000 TPM、120 RPM：
 
@@ -109,11 +107,7 @@ TPM 限制：120,000 ÷ 2,000 ÷ 60 = 1 request/second
 
 這是教學示例，不是正式環境配額。實際壓測要使用真實 Token 分布、Deployment quota 與 Metrics 驗證。
 
-### 驗證結果
-
-- [ ] 能分辨 RPM 上限與 TPM 換算上限。
-- [ ] 知道最小值只是起始估算，不是 SLA。
-- [ ] 沒有查詢或公開正式 API Key、Deployment URL 或 quota 值。
+這個例子顯示：RPM 與 TPM 必須分別換算，再取較低的容量作為初始估計；它不是 SLA，也不能取代正式 Deployment 的 Metrics。
 
 ## 常見問題
 

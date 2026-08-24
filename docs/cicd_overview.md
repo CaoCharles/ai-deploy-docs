@@ -53,21 +53,6 @@ flowchart LR
 !!! example "實際案例"
     Model API 與 Data API 的 deploy workflow 都由 push 到 `main` 觸發。Workflow 透過 WIF 登入 GCP，使用 commit SHA 前七碼標記 Image，推送到 Artifact Registry，再執行 `gcloud run deploy`。
 
-## Lab 實作練習
-
-**安全等級**：雲端唯讀
-
-```bash
-gh workflow list -R CaoCharles/ai-asst-model-api
-gh run list -R CaoCharles/ai-asst-model-api --workflow deploy.yml --limit 5
-```
-
-### 驗證結果
-
-- [ ] 能找到 workflow 的 trigger。
-- [ ] 能找到最近一次部署對應的 commit。
-- [ ] 沒有執行 `workflow run`、rerun 或任何正式部署。
-
 ## 延伸閱讀
 
 - [GitHub Actions：Understanding workflows](https://docs.github.com/actions/about-github-actions/understanding-github-actions)

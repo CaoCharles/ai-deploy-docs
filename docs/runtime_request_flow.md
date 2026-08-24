@@ -185,43 +185,6 @@ Data API 再把本輪 append 到 MongoDB Atlas 的 session history。這個保�
 | Data API 身分來源 | 以 JWT `sub` 為準，service token 不可寫入 | `ai-asst-data-api/app.py` | 2026-08-22 |
 | API 執行方式 | Model／Data API 均為 Flask + Gunicorn | 兩個 API 的正式 Dockerfile | 2026-08-22 |
 
-## Lab 實作練習
-
-**安全等級**：本機實作
-
-### 目標
-
-不用啟動服務，只從正式分支程式碼追出「問答、讀歷史、寫歷史」三條呼叫路徑。
-
-### 環境需求
-
-- 本機已有 `ai-asst-frontend`、`ai-asst-model-api`、`ai-asst-data-api`。
-- 可使用 Git 與 `rg`。
-- 在 `ai-asst-km` 根目錄執行。
-
-### 步驟
-
-```bash title="1. 找出 Frontend 的問答與保存順序"
-rg -n "prodApi.predict|appendTurn" ai-asst-frontend/src/pages/ChatPage.tsx
-```
-
-```bash title="2. 確認 Model API 正式分支只讀歷史"
-git -C ai-asst-model-api show origin/main:prod/model/session_store.py \
-  | rg -n "session-history|唯讀|No-op"
-```
-
-```bash title="3. 找出 Data API 的使用者與 service token 邊界"
-rg -n "list_my_sessions|post_session_history|post_turn|is_service" \
-  ai-asst-data-api/app.py
-```
-
-### 驗證結果
-
-- [ ] `prodApi.predict()` 出現在 `appendTurn()` 之前。
-- [ ] Model API 的 `MongoSessionStore.save()` 明確是 no-op。
-- [ ] Data API 的 session-history 只允許 service token。
-- [ ] Data API 的新增對話拒絕 service token，正式寫入來自使用者端。
-
 ## 常見問題
 
 ??? question "使用者送出問題時，GitHub Actions 會參與嗎？"

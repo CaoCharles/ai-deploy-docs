@@ -108,57 +108,6 @@ Model API 啟動時需要載入的應用資源較多，因此冷啟動感受通�
 | Model Gunicorn | 4 gthread workers、每個 25 threads、600 秒 timeout | `ai-asst-model-api/prod/Dockerfile` | 2026-08-23 |
 | Data Gunicorn | 1 sync worker、60 秒 timeout | `ai-asst-data-api/Dockerfile` | 2026-08-23 |
 
-## Lab 實作練習
-
-**安全等級**：雲端唯讀
-
-### 目標
-
-確認 Cloud Run Service、目前 Revision、Image 與資源摘要，不修改正式環境。
-
-### 環境需求
-
-Google Cloud CLI 已登入，且目前 Project 指向本系統使用的 GCP Project。
-
-### 1. 確認目前身分與 Project
-
-```bash title="確認 GCP 登入狀態"
-gcloud auth list --filter=status:ACTIVE --format="value(account)"
-gcloud config get-value project
-```
-
-### 2. 列出 Services 與目前 Revision
-
-```bash title="列出 Cloud Run Services"
-AI_DEPLOY_PROJECT_ID="$(gcloud config get-value project)"
-
-gcloud run services list \
-  --project "$AI_DEPLOY_PROJECT_ID" \
-  --region asia-east1 \
-  --platform managed \
-  --format="table(metadata.name,status.latestReadyRevisionName)"
-```
-
-應能找到 `ai-asst-model-api` 與 `ai-asst-data-api`。
-
-### 3. 查看不含機密值的服務摘要
-
-```bash title="查看 Model API 部署摘要"
-gcloud run services describe ai-asst-model-api \
-  --project "$AI_DEPLOY_PROJECT_ID" \
-  --region asia-east1 \
-  --platform managed \
-  --format="yaml(metadata.name,status.latestReadyRevisionName,spec.template.spec.timeoutSeconds,spec.template.spec.containers[0].image,spec.template.spec.containers[0].resources)"
-```
-
-這些都是唯讀指令，不會建立 Revision 或修改流量。
-
-### 驗證結果
-
-- [ ] Service 清單包含 Model API 與 Data API。
-- [ ] 每個 Service 都有 `latestReadyRevisionName`。
-- [ ] Image tag 可以對應 Git commit SHA 前七碼。
-
 ## 常見問題
 
 ??? question "Service 和 Revision 最簡單的差別是什麼？"

@@ -125,43 +125,6 @@ React 經 Vite build 後產生 `dist/`，內容主要是 HTML、CSS、JavaScript
 | GCP 身分 | Workload Identity Federation | Model/Data API `deploy.yml` | 2026-08-21 |
 | Frontend deploy | Vite build 後發布 Firebase live channel | `ai-asst-frontend/.github/workflows/deploy.yml` | 2026-08-21 |
 
-## Lab 實作練習
-
-**安全等級**：雲端唯讀
-
-### 目標
-
-查看三個 Repository 的 workflow 名稱與啟用狀態，不觸發部署。
-
-### 環境需求
-
-GitHub CLI 已登入，且目前帳號有權讀取這三個 Repository。
-
-### 步驟
-
-```bash title="確認 GitHub 登入並列出 workflows"
-gh auth status
-gh workflow list -R CaoCharles/ai-asst-model-api
-gh workflow list -R CaoCharles/ai-asst-data-api
-gh workflow list -R CaoCharles/ai-asst-frontend
-```
-
-預期可以找到：
-
-```text
-CI                           active
-Deploy (Cloud Run)           active
-Deploy (Firebase Hosting)    active
-```
-
-不同 Repository 只會顯示屬於自己的 workflow。這些 `list` 指令不會觸發部署。
-
-### 驗證結果
-
-- [ ] 三個 Repository 都能找到 `CI`。
-- [ ] 兩支 API 能找到 `Deploy (Cloud Run)`。
-- [ ] Frontend 能找到 `Deploy (Firebase Hosting)`。
-
 ## 常見問題
 
 ??? question "CI 成功是否代表線上 API 一定正常？"

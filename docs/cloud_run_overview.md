@@ -51,23 +51,6 @@ flowchart LR
 !!! example "實際案例"
     Model API 與 Data API 各自是一個 Cloud Run Service。兩者都允許縮到零，但 CPU、Memory、Max instances、timeout 與 concurrency 不同；這些差異來自服務工作負載，而不是因為 Cloud Run 規定所有 API 必須相同。
 
-## Lab 實作練習
-
-**安全等級**：雲端唯讀
-
-```bash
-gcloud run services list \
-  --region asia-east1 \
-  --platform managed \
-  --format="table(metadata.name,status.latestReadyRevisionName)"
-```
-
-### 驗證結果
-
-- [ ] 能找到 Service 與目前 Revision。
-- [ ] 能說明 Revision 不是固定 VM。
-- [ ] 指令沒有建立新 Revision 或改變流量。
-
 ## 延伸閱讀
 
 - [Google Cloud：What is Cloud Run](https://docs.cloud.google.com/run/docs/overview/what-is-cloud-run)

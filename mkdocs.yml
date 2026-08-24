@@ -113,9 +113,11 @@ extra_javascript:
 nav:
   - 首頁: index.md
   - API 與後端服務:
-      - API 學習路徑: api_overview.md
+      - API 與後端技術地圖: api_overview.md
       - HTTP Request、GET、POST 與 REST API: http_get_post_rest_api.md
+      - ai-asst-km 的 API 設計案例: api_design_case.md
       - Flask、FastAPI、Gunicorn 與 Uvicorn: flask_fastapi_gunicorn_uvicorn.md
+      - ai-asst-km 的技術架構案例: server_architecture_case.md
   - CI/CD 與交付:
       - CI/CD 學習路徑: cicd_overview.md
       - GitHub Actions 到 Cloud Run: github_actions_cloud_run_deployment.md

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the project-specific structure and safety markers of article files."""
+"""Validate the project-specific structure and architecture-writing contract."""
 
 from __future__ import annotations
 
@@ -14,7 +14,6 @@ import yaml
 REQUIRED_FRONTMATTER = ("authors", "tags")
 GIT_MANAGED_FRONTMATTER = ("date", "updated")
 REQUIRED_HEADINGS = ("學習目標", "延伸閱讀")
-SAFETY_LEVELS = ("本機實作", "雲端唯讀", "雲端寫入")
 SENSITIVE_PATTERNS = (
     ("private key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
     ("GitHub token", re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{20,}\b")),
@@ -71,18 +70,12 @@ def validate_text(text: str) -> list[str]:
     ):
         errors.append("實際設定查證缺少標準來源表格")
 
-    safety_match = re.search(
-        r"\*\*安全等級\*\*[：:]\s*(本機實作|雲端唯讀|雲端寫入)", body
-    )
     has_lab = any(heading.startswith("Lab") for heading in h2_lines)
-    if has_lab and not safety_match:
-        errors.append("Lab 缺少有效的 `安全等級` 標示")
-    elif safety_match and safety_match.group(1) == "雲端寫入":
-        for heading in ("影響", "復原方式"):
-            if heading not in h2_lines and not re.search(
-                rf"^### {re.escape(heading)}\s*$", body, flags=re.MULTILINE
-            ):
-                errors.append(f"雲端寫入 Lab 缺少 `{heading}`")
+    if has_lab:
+        errors.append("網站定位不使用 `## Lab...` 章節；請改寫為技術解釋、設定解讀或風險邊界")
+
+    if re.search(r"\*\*安全等級\*\*[：:]", body):
+        errors.append("網站不使用 Lab 安全等級標記；具風險內容請改寫為風險邊界與可能影響")
 
     if re.search(r"```mermaid[\s\S]*?<br\s*/?>[\s\S]*?```", body, flags=re.IGNORECASE):
         errors.append("Mermaid 區塊不可使用 HTML `<br>`")

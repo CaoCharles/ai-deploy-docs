@@ -124,40 +124,6 @@ Vite build 會把 `VITE_*` 的值編入瀏覽器下載的 JavaScript。使用者
 - [ ] Cloud Run 一般設定與 Secret 引用分開管理。
 - [ ] 查看服務設定時，不輸出 Secret payload。
 
-## Lab 實作練習
-
-**安全等級**：雲端唯讀
-
-### 目標
-
-查看 Cloud Run 環境變數結構，理解一般值與 Secret 引用的差別，不讀取 Secret payload。
-
-### 環境需求
-
-Google Cloud CLI 已登入，且帳號有權讀取目標 Cloud Run Service。
-
-### 步驟
-
-以下格式只列出環境變數的名稱與 Secret 引用，不要求讀取 Secret 的實際內容：
-
-```bash title="查看 Cloud Run 設定結構"
-AI_DEPLOY_PROJECT_ID="$(gcloud config get-value project)"
-
-gcloud run services describe ai-asst-data-api \
-  --project "$AI_DEPLOY_PROJECT_ID" \
-  --region asia-east1 \
-  --platform managed \
-  --format="yaml(spec.template.spec.containers[0].env)"
-```
-
-執行後仍應避免把完整輸出貼到公開 Issue、文章或聊天內容；先確認其中沒有非預期的明文值。
-
-### 驗證結果
-
-- [ ] 能辨識一般 `value` 與 Secret `valueSource` 的結構差別。
-- [ ] 沒有執行 Secret payload 讀取指令。
-- [ ] 沒有把終端完整輸出貼到公開位置。
-
 ## 常見問題
 
 ??? question "GitHub Secret 和 Secret Manager 是同一個地方嗎？"

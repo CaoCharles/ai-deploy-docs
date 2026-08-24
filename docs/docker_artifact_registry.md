@@ -77,21 +77,6 @@ Tag 方便人類閱讀，例如 Git commit SHA 前七碼；digest 則是內容�
 | Registry | GCP Artifact Registry Docker Repository | Model/Data API deploy workflow | 2026-08-23 |
 | Runtime | Image 由 Cloud Run Service 部署 | `gcloud run deploy --image` | 2026-08-23 |
 
-## Lab 實作練習
-
-**安全等級**：本機實作
-
-```bash
-git -C ai-asst-model-api show origin/main:prod/Dockerfile
-git -C ai-asst-data-api show origin/main:Dockerfile
-```
-
-### 驗證結果
-
-- [ ] 能找到 Base Image、依賴安裝與啟動命令。
-- [ ] 能說明 `EXPOSE` 不等於雲端 Firewall 規則。
-- [ ] 能說明 Registry 保存 Image、Cloud Run 執行 Image。
-
 ## 常見問題
 
 ??? question "Docker Image 和 Cloud Run Revision 是同一個東西嗎？"
