@@ -8,7 +8,7 @@ tags:
   - Uvicorn
 ---
 
-# ai-asst-km 的技術架構案例
+# Gunicorn 與 Uvicorn 架構案例
 
 [Flask、FastAPI、Gunicorn 與 Uvicorn](flask_fastapi_gunicorn_uvicorn.md) 講了 Framework、Interface、Server 三層的通用原理。這篇把那套原理套進 `ai-asst-km` 的三個服務：Model API、Data API，以及本站 AI 助理後端，看它們實際的技術組合、啟動指令與容量設定。
 

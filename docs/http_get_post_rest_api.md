@@ -12,7 +12,7 @@ tags:
 
 使用者在網頁按下「送出」後，瀏覽器不是直接呼叫 Python 函式，也不是直接操作資料庫。它先組成一個 HTTP Request，送到指定的 API；Web Framework 再依照 Method 與 Path，把 Request 交給正確的處理函式。
 
-這篇是通用講義：先看懂 Request 長什麼樣子、Method 語意怎麼決定、Framework 如何分派到函式。Application Server 如何接住連線，留給 [Flask、FastAPI、Gunicorn 與 Uvicorn](flask_fastapi_gunicorn_uvicorn.md)；`ai-asst-km` 實際的 API 設計與取捨，見 [ai-asst-km 的 API 設計案例](api_design_case.md)。
+這篇是通用講義：先看懂 Request 長什麼樣子、Method 語意怎麼決定、Framework 如何分派到函式。Request 進入 Framework 之前先經過哪一層 Application Server，留給下一篇[Flask、FastAPI、Gunicorn 與 Uvicorn](flask_fastapi_gunicorn_uvicorn.md)拆解；實際的 API 設計與取捨，見案例文章[REST API 設計案例](api_design_case.md)。
 
 ## 學習目標
 
@@ -231,7 +231,7 @@ HTTP Status Code 描述這次 HTTP 交換的結果；Response Body 裡的自訂�
 
 接著閱讀：
 
-- [ai-asst-km 的 API 設計案例](api_design_case.md)：看這些概念在實際系統中如何取捨。
+- [REST API 設計案例](api_design_case.md)：看這些概念在實際系統中如何取捨。
 - [Flask、FastAPI、Gunicorn 與 Uvicorn](flask_fastapi_gunicorn_uvicorn.md)：往下一層看 Request 怎麼被接住。
 
 ## 延伸閱讀

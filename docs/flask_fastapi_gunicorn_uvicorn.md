@@ -13,7 +13,7 @@ tags:
 
 理解 HTTP Method 與 Route 後，下一個問題是：HTTP Request 是誰先接住的？`workers`、`threads` 又是在控制什麼？
 
-這篇是通用講義：拆解 Web Framework、Application Interface 與 Application Server 三層，比較 Flask + Gunicorn 與 FastAPI + Uvicorn 兩種常見組合。`ai-asst-km` 實際的啟動指令、workers／threads 設定與容量對照，見 [ai-asst-km 的技術架構案例](server_architecture_case.md)。
+這篇是通用講義：拆解 Web Framework、Application Interface 與 Application Server 三層，比較 Flask + Gunicorn 與 FastAPI + Uvicorn 兩種常見組合。`ai-asst-km` 實際的啟動指令、workers／threads 設定與容量對照，見 [Gunicorn 與 Uvicorn 架構案例](server_architecture_case.md)。
 
 ## 學習目標
 
@@ -135,7 +135,7 @@ app = Flask(__name__)
 app = FastAPI()
 ```
 
-`ai-asst-km` 三個服務實際的 module 名稱，見 [ai-asst-km 的技術架構案例](server_architecture_case.md)。
+`ai-asst-km` 三個服務實際的 module 名稱，見 [Gunicorn 與 Uvicorn 架構案例](server_architecture_case.md)。
 
 ## I/O 等待、`gthread` 與 async
 
@@ -233,7 +233,7 @@ async def chat():
 | Gunicorn workers／threads | Container 內的 Gunicorn | Instance 內有多少 Application 工作槽可以接手處理 |
 | Cloud Run max instances | Cloud Run Autoscaler | Service 最多擴張到幾個 Instances |
 
-Google Cloud 建議 Cloud Run concurrency 不高於程式本身能穩定處理的 concurrency。否則 Request 已被算進該 Instance 的進行中流量，卻只能在 Gunicorn 前面等待工作槽；這可能增加延遲，也可能讓 Autoscaler 比預期更晚建立新 Instance。`ai-asst-km` 每個服務實際的 concurrency 與 worker 拓撲對照，見 [ai-asst-km 的技術架構案例](server_architecture_case.md)。
+Google Cloud 建議 Cloud Run concurrency 不高於程式本身能穩定處理的 concurrency。否則 Request 已被算進該 Instance 的進行中流量，卻只能在 Gunicorn 前面等待工作槽；這可能增加延遲，也可能讓 Autoscaler 比預期更晚建立新 Instance。`ai-asst-km` 每個服務實際的 concurrency 與 worker 拓撲對照，見 [Gunicorn 與 Uvicorn 架構案例](server_architecture_case.md)。
 
 ### 兩層 timeout 也不相同
 
@@ -263,7 +263,7 @@ FastAPI 的型別驗證、自動 OpenAPI 文件與 ASGI 支援很方便，但把
 Gunicorn 也能管理 ASGI worker，但 Uvicorn 官方已將舊的 `uvicorn.workers` module 標示為 deprecated，新的整合應使用獨立的 `uvicorn-worker` package，或直接使用 Uvicorn 內建的 `--workers`。因此網路上常見的舊指令不能不查版本就照抄。
 
 !!! info "怎麼選不是看誰比較新"
-    現有 Flask／WSGI 程式沒有 async 或自動 Schema 的需求時，Gunicorn 仍是合理而成熟的部署方式。新 API 若重視 type-driven validation、OpenAPI 與 async I/O，可以評估 FastAPI + Uvicorn；最終仍要依依賴套件、團隊維護能力與壓測結果決定。`ai-asst-km` 三個服務實際各選了哪一組，見 [ai-asst-km 的技術架構案例](server_architecture_case.md)。
+    現有 Flask／WSGI 程式沒有 async 或自動 Schema 的需求時，Gunicorn 仍是合理而成熟的部署方式。新 API 若重視 type-driven validation、OpenAPI 與 async I/O，可以評估 FastAPI + Uvicorn；最終仍要依依賴套件、團隊維護能力與壓測結果決定。`ai-asst-km` 三個服務實際各選了哪一組，見 [Gunicorn 與 Uvicorn 架構案例](server_architecture_case.md)。
 
 ## 常見問題
 
@@ -287,7 +287,7 @@ Gunicorn 也能管理 ASGI worker，但 Uvicorn 官方已將舊的 `uvicorn.work
 - Cloud Run concurrency 與 Gunicorn 工作槽是兩層設定，必須一起用壓測調整。
 - Timeout 也有平台、Application Server、程式與 Client 多層，最短的一層通常先影響使用者。
 
-接著閱讀 [ai-asst-km 的技術架構案例](server_architecture_case.md)，看這些概念在正式環境的實際數字。
+接著閱讀 [Gunicorn 與 Uvicorn 架構案例](server_architecture_case.md)，看這些概念在正式環境的實際數字。
 
 ## 延伸閱讀
 

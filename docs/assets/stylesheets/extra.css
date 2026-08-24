@@ -216,6 +216,10 @@
   animation: fade-in 0.3s ease-in-out;
 }
 
+.md-main .md-grid {
+  max-width: 50rem;
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

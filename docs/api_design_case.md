@@ -7,7 +7,7 @@ tags:
   - REST
 ---
 
-# ai-asst-km 的 API 設計案例
+# REST API 設計案例
 
 [HTTP Request、GET、POST 與 REST API](http_get_post_rest_api.md) 講了 Method 語意與怎麼決定用哪一個 Method。這篇把那套框架套進 `ai-asst-km` 的實際系統，看正式環境的 API 地圖，以及幾個「照理論該用 A、實際用 B」的設計取捨。
 
@@ -20,7 +20,7 @@ tags:
 
 ## 這篇筆記涵蓋的範圍
 
-這篇只談 Frontend、Model API、Data API 之間的 Route 設計與取捨，不重講 HTTP Method、Status Code 的通用定義；Request 進入 Container 後由誰接住，見 [ai-asst-km 的技術架構案例](server_architecture_case.md)。
+這篇只談 Frontend、Model API、Data API 之間的 Route 設計與取捨，不重講 HTTP Method、Status Code 的通用定義；Request 進入 Container 後由誰接住，見 [Gunicorn 與 Uvicorn 架構案例](server_architecture_case.md)。
 
 ## 前置知識
 
@@ -122,5 +122,5 @@ HTTP Method 是 Client 與 Data API 之間的協定；`find_one()`、`update_one
 ## 延伸閱讀
 
 - [HTTP Request、GET、POST 與 REST API](http_get_post_rest_api.md)：這篇案例對應的通用講義。
-- [ai-asst-km 的技術架構案例](server_architecture_case.md)：Request 進入 Container 後怎麼被接住。
+- [Gunicorn 與 Uvicorn 架構案例](server_architecture_case.md)：Request 進入 Container 後怎麼被接住。
 - [Flask-RESTX 官方文件](https://flask-restx.readthedocs.io/en/latest/)

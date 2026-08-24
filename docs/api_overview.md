@@ -109,7 +109,7 @@ Gunicorn 和 Uvicorn 都能接收 HTTP Request，但它們的核心執行模型�
 | 併發方式 | 多 workers；依 worker class 使用同步、threads 或其他模型 | event loop 處理 async 工作；也可增加 workers |
 | 適合先評估的情境 | 現有 WSGI／Flask 程式，或需要 processes／threads 併發模型 | 需要 async／await、WebSocket，或原生 ASGI Framework |
 
-`ai-asst-km` 實際選了哪一組、workers／threads 怎麼設定，見 [ai-asst-km 的技術架構案例](server_architecture_case.md)。
+`ai-asst-km` 實際選了哪一組、workers／threads 怎麼設定，見 [Gunicorn 與 Uvicorn 架構案例](server_architecture_case.md)。
 
 ### 常見產品與平台案例
 
@@ -147,14 +147,14 @@ Framework 會限制可直接使用的介面，但不是單純的「新舊替換�
 | Data API | Gunicorn → WSGI → Flask | 單一 `sync` worker，Request 通常較短 |
 | 本站 AI 助理後端 | Uvicorn → ASGI → FastAPI | 單一 Uvicorn process，驅動 event loop |
 
-完整的 Application object 命名規則、逐段啟動指令拆解、`gthread` 設定原因，以及 Cloud Run concurrency 與 Gunicorn 容量的對照，都在 [ai-asst-km 的技術架構案例](server_architecture_case.md)。
+完整的 Application object 命名規則、逐段啟動指令拆解、`gthread` 設定原因，以及 Cloud Run concurrency 與 Gunicorn 容量的對照，都在 [Gunicorn 與 Uvicorn 架構案例](server_architecture_case.md)。
 
 ## 建議閱讀順序
 
 1. [HTTP Request、GET、POST 與 REST API](http_get_post_rest_api.md)：先讀懂 Client 與 Server 之間的對外契約。
-2. [ai-asst-km 的 API 設計案例](api_design_case.md)：看這些概念在實際系統中如何取捨。
+2. [REST API 設計案例](api_design_case.md)：看這些概念在實際系統中如何取捨。
 3. [Flask、FastAPI、Gunicorn 與 Uvicorn](flask_fastapi_gunicorn_uvicorn.md)：深入理解 WSGI／ASGI、workers、threads 與 event loop。
-4. [ai-asst-km 的技術架構案例](server_architecture_case.md)：看三個服務實際的啟動指令與容量設定。
+4. [Gunicorn 與 Uvicorn 架構案例](server_architecture_case.md)：看三個服務實際的啟動指令與容量設定。
 5. [Cloud Run 學習路徑](cloud_run_overview.md)：理解 Container 上線後的 Instance 與 concurrency。
 
 ## 延伸閱讀
