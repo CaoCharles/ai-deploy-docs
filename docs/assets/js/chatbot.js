@@ -139,6 +139,7 @@
 
     function clearActionbar() {
       actionbar.replaceChildren();
+      messages.querySelectorAll(".ai-chat-regenerate").forEach((button) => button.remove());
     }
 
     function showStopButton() {
@@ -154,12 +155,29 @@
     }
 
     function showRegenerateButton() {
+      const botRows = messages.querySelectorAll(".ai-chat-row--bot");
+      const actions = botRows[botRows.length - 1]?.querySelector(".ai-chat-msg-actions");
+      if (!actions) return;
+
+      actions.querySelector(".ai-chat-regenerate")?.remove();
       const button = document.createElement("button");
       button.type = "button";
-      button.className = "ai-chat-pill";
+      button.className = "ai-chat-message-action ai-chat-regenerate";
       button.innerHTML = '<svg class="ai-chat-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg><span>重新生成</span>';
       button.addEventListener("click", regenerate);
-      actionbar.replaceChildren(button);
+      actions.appendChild(button);
+    }
+
+    function scrollLatestExchangeToStart(behavior = "smooth") {
+      const botRows = messages.querySelectorAll(".ai-chat-row--bot");
+      const botRow = botRows[botRows.length - 1];
+      if (!botRow) return;
+      const previousRow = botRow.previousElementSibling;
+      const target = previousRow?.classList.contains("ai-chat-row--user") ? previousRow : botRow;
+      messages.scrollTo({
+        top: Math.max(0, target.offsetTop - 8),
+        behavior,
+      });
     }
 
     function copyMessageText(item, button) {
@@ -188,6 +206,9 @@
       heading.innerHTML = '<svg class="ai-chat-source-heading-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg><span>參考文件</span>';
       section.appendChild(heading);
 
+      const list = document.createElement("div");
+      list.className = "ai-chat-source-list";
+
       normalized.forEach((source) => {
         const link = document.createElement("a");
         link.className = "ai-chat-source-link";
@@ -199,8 +220,9 @@
         label.textContent = source.title;
         link.appendChild(label);
         link.insertAdjacentHTML("beforeend", '<svg class="ai-chat-source-link-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg>');
-        section.appendChild(link);
+        list.appendChild(link);
       });
+      section.appendChild(list);
 
       return section;
     }
@@ -374,7 +396,10 @@
           suggestions,
         );
       });
-      if (history[history.length - 1]?.role === "model") showRegenerateButton();
+      if (history[history.length - 1]?.role === "model") {
+        showRegenerateButton();
+        scrollLatestExchangeToStart("auto");
+      }
     }
 
     function setWaiting(value) {
@@ -446,6 +471,7 @@
       if (replaceLastBot) replaceLastBotMessage(finalText, finalSources, finalSuggestions);
       else appendMessage("bot", finalText, true, finalSources, finalSuggestions);
       showRegenerateButton();
+      window.requestAnimationFrame(() => scrollLatestExchangeToStart());
       input.focus();
     }
 
