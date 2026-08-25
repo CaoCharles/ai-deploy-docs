@@ -54,22 +54,38 @@
     if (document.getElementById("ai-deploy-chatbot")) return;
     document.body.insertAdjacentHTML(
       "beforeend",
-      `<button id="ai-chat-open" aria-label="開啟 AI 助理">AI</button>
+      `<button id="ai-chat-open" aria-label="開啟 AI 助理">
+        <span class="ai-chat-open-orb" aria-hidden="true">✦</span>
+        <span class="ai-chat-open-label">AI 助理</span>
+      </button>
       <section id="ai-deploy-chatbot" aria-label="AI 助理聊天視窗">
         <header class="ai-chat-header">
-          <div class="ai-chat-header-avatar" aria-hidden="true">AI</div>
-          <span><strong>${chatbotName}</strong><small>根據本站系統筆記回答</small></span>
-          <div>
+          <div class="ai-chat-brand">
+            <div class="ai-chat-header-avatar" aria-hidden="true">✦</div>
+            <span><strong>${chatbotName}</strong><small><i></i> 已連線 · 根據本站筆記回答</small></span>
+          </div>
+          <div class="ai-chat-header-actions">
             <button id="ai-chat-clear" title="清除對話" aria-label="清除對話">↻</button>
             <button id="ai-chat-expand" title="切換全螢幕" aria-label="切換全螢幕">⛶</button>
             <button id="ai-chat-close" title="關閉" aria-label="關閉">×</button>
           </div>
         </header>
+        <div class="ai-chat-context">
+          <span>知識庫</span>
+          <strong>雲端部署筆記</strong>
+          <span class="ai-chat-context-safe">✓ 文件範圍</span>
+        </div>
         <div id="ai-chat-messages" aria-live="polite"></div>
         <div id="ai-chat-actionbar"></div>
         <form id="ai-chat-form">
-          <input id="ai-chat-input" maxlength="${maxMessageChars}" autocomplete="off" placeholder="輸入系統問題…" aria-label="輸入問題">
-          <button id="ai-chat-send" type="submit" aria-label="送出問題">➤</button>
+          <div class="ai-chat-composer">
+            <textarea id="ai-chat-input" rows="1" maxlength="${maxMessageChars}" autocomplete="off" placeholder="輸入你的部署問題，Shift + Enter 換行" aria-label="輸入問題"></textarea>
+            <button id="ai-chat-send" type="submit" aria-label="送出問題">↑</button>
+          </div>
+          <div class="ai-chat-form-meta">
+            <span>◇ AI 回答僅供參考，請以本站文件與正式設定為準</span>
+            <span id="ai-chat-counter">0/${maxMessageChars}</span>
+          </div>
         </form>
       </section>`,
     );
@@ -81,6 +97,7 @@
     const input = document.getElementById("ai-chat-input");
     const sendButton = document.getElementById("ai-chat-send");
     const form = document.getElementById("ai-chat-form");
+    const counter = document.getElementById("ai-chat-counter");
     let history = loadHistory();
     let activeController = null;
     let abortedByUser = false;
@@ -130,7 +147,7 @@
 
       const avatar = document.createElement("div");
       avatar.className = "ai-chat-avatar";
-      avatar.textContent = role === "user" ? "你" : "AI";
+      avatar.textContent = role === "user" ? "你" : "✦";
       avatar.setAttribute("aria-hidden", "true");
 
       const item = document.createElement("article");
@@ -145,7 +162,11 @@
         row.append(item, avatar);
       } else {
         const col = document.createElement("div");
-        col.className = "ai-chat-col";
+        col.className = "ai-chat-col ai-chat-answer";
+
+        const meta = document.createElement("div");
+        meta.className = "ai-chat-answer-meta";
+        meta.innerHTML = '<strong>AI 筆記助理</strong><span>本站文件</span>';
 
         const copyButton = document.createElement("button");
         copyButton.type = "button";
@@ -158,7 +179,7 @@
         actions.className = "ai-chat-msg-actions";
         actions.appendChild(copyButton);
 
-        col.append(item, actions);
+        col.append(meta, item, actions);
         row.append(avatar, col);
       }
 
@@ -186,6 +207,10 @@
     function renderSuggestions(questions) {
       const wrap = document.createElement("div");
       wrap.className = "ai-chat-suggestions";
+      const title = document.createElement("div");
+      title.className = "ai-chat-suggestions-title";
+      title.innerHTML = '<span aria-hidden="true">✦</span> 可以從這些問題開始';
+      wrap.appendChild(title);
       questions.forEach((question) => {
         const button = document.createElement("button");
         button.type = "button";
@@ -205,7 +230,13 @@
       messages.replaceChildren();
       clearActionbar();
       if (history.length === 0) {
-        appendMessage("bot", "嗨！我是 AI KM 筆記助理，根據本站系統筆記回答問題。點下面的建議問題快速開始，或直接輸入你的問題：", false);
+        const welcome = document.createElement("section");
+        welcome.className = "ai-chat-welcome";
+        welcome.innerHTML =
+          '<div class="ai-chat-welcome-orb" aria-hidden="true">✦</div>' +
+          '<h2>今天想了解什麼？</h2>' +
+          '<p>我是你的雲端架構筆記助理。描述遇到的情境，我會從本站文件整理觀念、設定與下一步。</p>';
+        messages.appendChild(welcome);
         renderSuggestions([
           "HTTP GET 和 POST 有什麼差別？",
           "Flask 為什麼搭配 Gunicorn？",
@@ -234,7 +265,7 @@
       const typing = document.createElement("div");
       typing.className = "ai-chat-row ai-chat-row--bot";
       typing.innerHTML =
-        '<div class="ai-chat-avatar" aria-hidden="true">AI</div>' +
+        '<div class="ai-chat-avatar" aria-hidden="true">✦</div>' +
         '<div class="ai-chat-typing" role="status" aria-label="正在整理文件內容"><span></span><span></span><span></span></div>';
       messages.appendChild(typing);
       messages.scrollTop = messages.scrollHeight;
@@ -293,6 +324,8 @@
       const priorHistory = history.slice(-maxHistoryMessages);
       appendMessage("user", message);
       input.value = "";
+      input.style.height = "auto";
+      counter.textContent = `0/${maxMessageChars}`;
 
       if (!apiUrl) {
         appendMessage(
@@ -334,6 +367,17 @@
       drawHistory();
     });
     form.addEventListener("submit", sendMessage);
+    input.addEventListener("input", () => {
+      input.style.height = "auto";
+      input.style.height = `${Math.min(input.scrollHeight, 112)}px`;
+      counter.textContent = `${input.value.length}/${maxMessageChars}`;
+    });
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
   }
 
   if (window.document$) {
