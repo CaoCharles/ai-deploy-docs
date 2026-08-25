@@ -57,6 +57,7 @@
       `<button id="ai-chat-open" aria-label="開啟 AI 助理">AI</button>
       <section id="ai-deploy-chatbot" aria-label="AI 助理聊天視窗">
         <header class="ai-chat-header">
+          <div class="ai-chat-header-avatar" aria-hidden="true">AI</div>
           <span><strong>${chatbotName}</strong><small>根據本站系統筆記回答</small></span>
           <div>
             <button id="ai-chat-clear" title="清除對話" aria-label="清除對話">↻</button>
@@ -81,6 +82,14 @@
     let history = loadHistory();
 
     function appendMessage(role, text, persist = true) {
+      const row = document.createElement("div");
+      row.className = role === "user" ? "ai-chat-row ai-chat-row--user" : "ai-chat-row ai-chat-row--bot";
+
+      const avatar = document.createElement("div");
+      avatar.className = "ai-chat-avatar";
+      avatar.textContent = role === "user" ? "你" : "AI";
+      avatar.setAttribute("aria-hidden", "true");
+
       const item = document.createElement("article");
       item.className = role === "user" ? "ai-chat-user" : "ai-chat-bot";
       if (role === "user") {
@@ -88,7 +97,9 @@
       } else {
         item.innerHTML = renderMarkdown(text);
       }
-      messages.appendChild(item);
+
+      row.append(...(role === "user" ? [item, avatar] : [avatar, item]));
+      messages.appendChild(row);
       messages.scrollTop = messages.scrollHeight;
       if (persist) {
         history.push({ role: role === "user" ? "user" : "model", parts: [{ text }] });
@@ -97,14 +108,33 @@
       }
     }
 
+    function renderSuggestions(questions) {
+      const wrap = document.createElement("div");
+      wrap.className = "ai-chat-suggestions";
+      questions.forEach((question) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "ai-chat-suggestion";
+        button.textContent = question;
+        button.addEventListener("click", () => {
+          input.value = question;
+          form.requestSubmit();
+        });
+        wrap.appendChild(button);
+      });
+      messages.appendChild(wrap);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
     function drawHistory() {
       messages.replaceChildren();
       if (history.length === 0) {
-        appendMessage(
-          "bot",
-          "嗨！我是 AI KM 筆記助理。你可以問我：\n\n- HTTP GET 和 POST 有什麼差別？\n- Flask 為什麼搭配 Gunicorn？\n- Cloud Run Service、Revision 和 Instance 有什麼差別？",
-          false,
-        );
+        appendMessage("bot", "嗨！我是 AI KM 筆記助理，根據本站系統筆記回答問題。點下面的建議問題快速開始，或直接輸入你的問題：", false);
+        renderSuggestions([
+          "HTTP GET 和 POST 有什麼差別？",
+          "Flask 為什麼搭配 Gunicorn？",
+          "Cloud Run Service、Revision 和 Instance 有什麼差別？",
+        ]);
         return;
       }
       history.forEach((message) => {
@@ -124,6 +154,7 @@
       const message = input.value.trim();
       if (!message || waiting) return;
 
+      document.querySelector(".ai-chat-suggestions")?.remove();
       const priorHistory = history.slice(-maxHistoryMessages);
       appendMessage("user", message);
       input.value = "";
@@ -138,9 +169,12 @@
 
       setWaiting(true);
       const typing = document.createElement("div");
-      typing.className = "ai-chat-typing";
-      typing.textContent = "正在整理文件內容…";
+      typing.className = "ai-chat-row ai-chat-row--bot";
+      typing.innerHTML =
+        '<div class="ai-chat-avatar" aria-hidden="true">AI</div>' +
+        '<div class="ai-chat-typing" role="status" aria-label="正在整理文件內容"><span></span><span></span><span></span></div>';
       messages.appendChild(typing);
+      messages.scrollTop = messages.scrollHeight;
 
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 60_000);
