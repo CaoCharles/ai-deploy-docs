@@ -1,10 +1,16 @@
-"""Generate the public documentation index and runtime chatbot config."""
+"""Generate the public documentation chunk index and runtime chatbot config."""
 
 from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
+
+FRONTMATTER_RE = re.compile(r"^---\n.*?\n---\n", re.DOTALL)
+HEADING_RE = re.compile(r"^(#{1,2})\s+(.*)$")
+FENCE_RE = re.compile(r"^(```|~~~)")
+INTRO_HEADING = "簡介"
 
 
 def markdown_url(site_url: str, docs_dir: Path, markdown_file: Path) -> str:
@@ -23,25 +29,61 @@ def first_title(markdown: str, fallback: str) -> str:
     return fallback.replace("-", " ").replace("_", " ").title()
 
 
+def chunk_markdown(markdown: str, title: str, url: str) -> list[dict]:
+    """Split a page's body into per-section chunks along ``##`` headings.
+
+    Headings inside fenced code blocks are ignored so a code sample
+    commented with ``## something`` doesn't split the chunk mid-example.
+    """
+    body = FRONTMATTER_RE.sub("", markdown, count=1)
+
+    chunks: list[dict] = []
+    heading = INTRO_HEADING
+    lines: list[str] = []
+    in_fence = False
+
+    def flush() -> None:
+        text = "\n".join(lines).strip()
+        if text:
+            chunks.append({"title": title, "url": url, "heading": heading, "text": text})
+
+    for line in body.splitlines():
+        if FENCE_RE.match(line.strip()):
+            in_fence = not in_fence
+            lines.append(line)
+            continue
+        if not in_fence:
+            match = HEADING_RE.match(line)
+            if match:
+                level = match.group(1)
+                if level == "#":
+                    continue  # page H1 is already carried as `title`
+                flush()
+                heading = match.group(2).strip()
+                lines = []
+                continue
+        lines.append(line)
+    flush()
+    return chunks
+
+
 def on_post_build(config, **kwargs):
     site_dir = Path(config["site_dir"])
     docs_dir = Path(config["docs_dir"])
     site_url = config.get("site_url", "").rstrip("/")
 
-    documents = []
+    chunks: list[dict] = []
+    page_count = 0
     for markdown_file in sorted(docs_dir.rglob("*.md")):
         markdown = markdown_file.read_text(encoding="utf-8")
-        documents.append(
-            {
-                "title": first_title(markdown, markdown_file.stem),
-                "url": markdown_url(site_url, docs_dir, markdown_file),
-                "content": markdown,
-            }
-        )
+        url = markdown_url(site_url, docs_dir, markdown_file)
+        title = first_title(markdown, markdown_file.stem)
+        chunks.extend(chunk_markdown(markdown, title, url))
+        page_count += 1
 
     content_path = site_dir / "content.json"
     content_path.write_text(
-        json.dumps(documents, ensure_ascii=False, indent=2),
+        json.dumps(chunks, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 
@@ -60,5 +102,5 @@ def on_post_build(config, **kwargs):
         encoding="utf-8",
     )
 
-    print(f"Generated {content_path} with {len(documents)} pages")
+    print(f"Generated {content_path} with {len(chunks)} chunks from {page_count} pages")
     print(f"Generated {config_path}; API configured: {bool(api_url)}")

@@ -1,5 +1,6 @@
 import importlib
 import os
+import re
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -13,11 +14,21 @@ os.environ.pop("GEMINI_API_KEY", None)
 chat_server = importlib.import_module("chat_server")
 
 
+def fake_embedding(text: str, dim: int = 32) -> list[float]:
+    """Bag-of-words pseudo-embedding: texts sharing words score higher on cosine similarity."""
+    vector = [0.0] * dim
+    words = re.findall(r"[a-zA-Z0-9]+", text.lower())
+    for word in words:
+        vector[hash(word) % dim] += 1.0
+    return vector or [1.0] * dim
+
+
 class FakeModels:
     def __init__(self, text="ok", error=None):
         self.text = text
         self.error = error
         self.calls = []
+        self.embed_calls = []
 
     def generate_content(self, **kwargs):
         self.calls.append(kwargs)
@@ -25,19 +36,31 @@ class FakeModels:
             raise self.error
         return SimpleNamespace(text=self.text)
 
+    def embed_content(self, *, model, contents, config):
+        self.embed_calls.append({"model": model, "contents": contents, "config": config})
+        texts = contents if isinstance(contents, list) else [contents]
+        embeddings = [SimpleNamespace(values=fake_embedding(text)) for text in texts]
+        return SimpleNamespace(embeddings=embeddings)
 
-class FakeDocumentationCache:
-    def __init__(self, content="Page: Test\nURL: https://example.test/\nContent:\nCloud Run"):
-        self.content = content
 
-    def get(self):
-        if isinstance(self.content, Exception):
-            raise self.content
-        return self.content
+def fake_embedder(texts: list[str], task_type: str) -> list[list[float]]:
+    return [fake_embedding(text) for text in texts]
+
+
+def make_chunk(heading: str, text: str, title: str = "Test", url: str = "https://example.test/") -> "chat_server.DocChunk":
+    return chat_server.DocChunk(title=title, url=url, heading=heading, text=text)
+
+
+class FakeRetrievalIndex:
+    def __init__(self, chunks=None):
+        self.chunks = chunks or [make_chunk("Overview", "Cloud Run is a managed platform.")]
+
+    def search(self, query, top_k):
+        return self.chunks[:top_k]
 
 
 def setup_function():
-    chat_server.documentation_cache = FakeDocumentationCache()
+    chat_server.retrieval_index = FakeRetrievalIndex()
     chat_server.rate_limiter = chat_server.InMemoryRateLimiter(20, 60)
 
 
@@ -48,9 +71,12 @@ def test_health_check_does_not_require_gemini_key():
     assert response.json()["service"] == "ai-deploy-docs-chatbot"
 
 
-def test_backend_owns_prompt_and_uses_documentation():
+def test_backend_owns_prompt_and_uses_retrieved_chunks():
     models = FakeModels()
     chat_server.client = SimpleNamespace(models=models)
+    chat_server.retrieval_index = FakeRetrievalIndex(
+        [make_chunk("Overview", "Cloud Run 是受管平台。", url="https://example.test/cloud-run/")]
+    )
 
     with TestClient(chat_server.app) as http:
         response = http.post(
@@ -61,7 +87,7 @@ def test_backend_owns_prompt_and_uses_documentation():
     assert response.status_code == 200
     prompt = models.calls[0]["config"].system_instruction
     assert "AI KM 系統實戰筆記" in prompt
-    assert "Cloud Run" in prompt
+    assert "Cloud Run 是受管平台。" in prompt
     assert "員工 KM" in prompt
 
 
@@ -83,24 +109,51 @@ def test_client_cannot_override_system_instruction():
     assert models.calls == []
 
 
-def test_documentation_cache_reuses_content_and_serves_stale_on_error():
-    calls = []
-    outcomes = iter(["cached", RuntimeError("offline")])
+def test_retrieval_index_ranks_by_similarity_and_reuses_cache():
+    chunks = [
+        make_chunk("Gunicorn", "gthread workers handle I/O wait for Model API."),
+        make_chunk("HTTP", "GET and POST describe request semantics."),
+    ]
+    load_calls = []
 
     def loader():
-        calls.append(True)
+        load_calls.append(True)
+        return chunks
+
+    embed_calls = []
+
+    def embedder(texts, task_type):
+        embed_calls.append((tuple(texts), task_type))
+        return [fake_embedding(text) for text in texts]
+
+    index = chat_server.RetrievalIndex(loader=loader, embedder=embedder, cache_seconds=3_600)
+
+    top = index.search("Model API 的 gthread 設定", top_k=1)
+    assert top == [chunks[0]]
+    assert len(load_calls) == 1
+    assert embed_calls[0][1] == "RETRIEVAL_DOCUMENT"
+
+    # A second search reuses the cached, already-embedded index.
+    index.search("another question", top_k=1)
+    assert len(load_calls) == 1
+    assert embed_calls[-1][1] == "RETRIEVAL_QUERY"
+
+
+def test_retrieval_index_serves_stale_chunks_on_refresh_error():
+    chunks = [make_chunk("Overview", "cached content")]
+    outcomes = iter([chunks, RuntimeError("offline")])
+
+    def loader():
         result = next(outcomes)
         if isinstance(result, Exception):
             raise result
         return result
 
-    cache = chat_server.DocumentationCache(loader=loader, cache_seconds=3_600)
-    assert cache.get() == "cached"
-    assert cache.get() == "cached"
-    assert len(calls) == 1
-    cache.expires_at = 0
-    assert cache.get() == "cached"
-    assert len(calls) == 2
+    index = chat_server.RetrievalIndex(loader=loader, embedder=fake_embedder, cache_seconds=3_600)
+    assert index.search("q", top_k=1) == chunks
+
+    index.expires_at = 0
+    assert index.search("q", top_k=1) == chunks
 
 
 def test_internal_error_is_not_returned_to_client():
