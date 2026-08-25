@@ -147,15 +147,22 @@ def fetch_chunks() -> list[DocChunk]:
     return chunks
 
 
+EMBED_BATCH_SIZE = 90  # Gemini's embed_content caps a single batch at 100 texts.
+
+
 def embed_texts(texts: list[str], task_type: str) -> list[list[float]]:
     if not client:
         raise DocumentationUnavailable("Gemini client is not configured")
-    response = client.models.embed_content(
-        model=EMBEDDING_MODEL,
-        contents=texts,
-        config=types.EmbedContentConfig(task_type=task_type),
-    )
-    return [embedding.values for embedding in response.embeddings]
+    vectors: list[list[float]] = []
+    for start in range(0, len(texts), EMBED_BATCH_SIZE):
+        batch = texts[start : start + EMBED_BATCH_SIZE]
+        response = client.models.embed_content(
+            model=EMBEDDING_MODEL,
+            contents=batch,
+            config=types.EmbedContentConfig(task_type=task_type),
+        )
+        vectors.extend(embedding.values for embedding in response.embeddings)
+    return vectors
 
 
 def normalize_rows(matrix: np.ndarray) -> np.ndarray:

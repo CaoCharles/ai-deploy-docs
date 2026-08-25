@@ -156,6 +156,18 @@ def test_retrieval_index_serves_stale_chunks_on_refresh_error():
     assert index.search("q", top_k=1) == chunks
 
 
+def test_embed_texts_splits_large_batches():
+    models = FakeModels()
+    chat_server.client = SimpleNamespace(models=models)
+
+    texts = [f"chunk {i}" for i in range(182)]
+    vectors = chat_server.embed_texts(texts, "RETRIEVAL_DOCUMENT")
+
+    assert len(vectors) == 182
+    assert all(len(call["contents"]) <= chat_server.EMBED_BATCH_SIZE for call in models.embed_calls)
+    assert len(models.embed_calls) == 3
+
+
 def test_internal_error_is_not_returned_to_client():
     chat_server.client = SimpleNamespace(
         models=FakeModels(error=RuntimeError("upstream secret detail"))
