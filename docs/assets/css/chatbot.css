@@ -579,6 +579,73 @@
   overflow-wrap: anywhere;
 }
 
+.ai-chat-recommendations {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--ai-chat-surface) 90%, var(--ai-chat-accent-soft));
+  border: 1px solid var(--ai-chat-border);
+  border-radius: 14px;
+}
+
+.ai-chat-recommendations-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ai-chat-text);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
+}
+
+.ai-chat-recommendations-heading svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--ai-chat-accent-strong);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.ai-chat-recommendation-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ai-chat-recommendation {
+  display: inline-flex;
+  max-width: 100%;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  color: var(--ai-chat-text);
+  text-align: left;
+  background: var(--ai-chat-surface);
+  border: 1px solid var(--ai-chat-border);
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.ai-chat-recommendation:hover {
+  color: var(--ai-chat-accent-strong);
+  background: var(--ai-chat-accent-soft);
+  border-color: color-mix(in srgb, var(--ai-chat-accent) 42%, var(--ai-chat-border));
+  transform: translateY(-1px);
+}
+
+.ai-chat-recommendation:active {
+  transform: translateY(0);
+}
+
 @keyframes ai-chat-msg-in {
   from {
     opacity: 0;

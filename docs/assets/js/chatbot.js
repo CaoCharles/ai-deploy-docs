@@ -72,6 +72,19 @@
       .slice(0, 3);
   }
 
+  function normalizeSuggestions(value) {
+    if (!Array.isArray(value)) return [];
+    const seen = new Set();
+    return value
+      .map((question) => (typeof question === "string" ? question.trim().slice(0, 120) : ""))
+      .filter((question) => {
+        if (!question || seen.has(question)) return false;
+        seen.add(question);
+        return true;
+      })
+      .slice(0, 3);
+  }
+
   function injectWidget() {
     if (document.getElementById("ai-deploy-chatbot")) return;
     document.body.insertAdjacentHTML(
@@ -192,8 +205,42 @@
       return section;
     }
 
-    function appendMessage(role, text, persist = true, sources = []) {
+    function createRecommendationSection(suggestions) {
+      const normalized = normalizeSuggestions(suggestions);
+      if (!normalized.length) return null;
+
+      const section = document.createElement("section");
+      section.className = "ai-chat-recommendations";
+      section.setAttribute("aria-label", "推薦問題");
+
+      const heading = document.createElement("div");
+      heading.className = "ai-chat-recommendations-heading";
+      heading.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.4 4.6L18 9l-4.6 1.4L12 15l-1.4-4.6L6 9l4.6-1.4L12 3Z"></path><path d="m18.5 14 .8 2.7 2.7.8-2.7.8-.8 2.7-.8-2.7-2.7-.8 2.7-.8.8-2.7Z"></path><path d="m5 3 .6 2L8 5.7l-2.4.7L5 8.5l-.6-2.1L2 5.7 4.4 5 5 3Z"></path></svg><span>推薦問題</span>';
+      section.appendChild(heading);
+
+      const list = document.createElement("div");
+      list.className = "ai-chat-recommendation-list";
+      normalized.forEach((question) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "ai-chat-recommendation";
+        button.textContent = question;
+        button.addEventListener("click", () => {
+          if (waiting) return;
+          input.value = question;
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          form.requestSubmit();
+        });
+        list.appendChild(button);
+      });
+      section.appendChild(list);
+
+      return section;
+    }
+
+    function appendMessage(role, text, persist = true, sources = [], suggestions = []) {
       const normalizedSources = role === "user" ? [] : normalizeSources(sources);
+      const normalizedSuggestions = role === "user" ? [] : normalizeSuggestions(suggestions);
       const row = document.createElement("div");
       row.className = role === "user" ? "ai-chat-row ai-chat-row--user" : "ai-chat-row ai-chat-row--bot";
 
@@ -228,19 +275,15 @@
         copyButton.setAttribute("aria-label", "複製這則回覆");
         copyButton.addEventListener("click", () => copyMessageText(item, copyButton));
 
-        const followUpButton = document.createElement("button");
-        followUpButton.type = "button";
-        followUpButton.className = "ai-chat-message-action";
-        followUpButton.innerHTML = '<svg class="ai-chat-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v5"></path></svg><span>繼續追問</span>';
-        followUpButton.addEventListener("click", () => input.focus());
-
         const actions = document.createElement("div");
         actions.className = "ai-chat-msg-actions";
-        actions.append(copyButton, followUpButton);
+        actions.appendChild(copyButton);
 
         col.append(meta, item);
         const sourceSection = createSourceSection(normalizedSources);
         if (sourceSection) col.appendChild(sourceSection);
+        const recommendationSection = createRecommendationSection(normalizedSuggestions);
+        if (recommendationSection) col.appendChild(recommendationSection);
         col.appendChild(actions);
         row.append(avatar, col);
       }
@@ -250,6 +293,7 @@
       if (persist) {
         const entry = { role: role === "user" ? "user" : "model", parts: [{ text }] };
         if (normalizedSources.length) entry.sources = normalizedSources;
+        if (normalizedSuggestions.length) entry.suggestions = normalizedSuggestions;
         history.push(entry);
         history = history.slice(-maxHistoryMessages);
         saveHistory(history);
@@ -257,20 +301,25 @@
       return item;
     }
 
-    function replaceLastBotMessage(text, sources = []) {
+    function replaceLastBotMessage(text, sources = [], suggestions = []) {
       const normalizedSources = normalizeSources(sources);
+      const normalizedSuggestions = normalizeSuggestions(suggestions);
       const rows = messages.querySelectorAll(".ai-chat-row--bot");
       const lastRow = rows[rows.length - 1];
       const bubble = lastRow?.querySelector(".ai-chat-bot");
       if (bubble) bubble.innerHTML = renderMarkdown(text);
       const col = lastRow?.querySelector(".ai-chat-answer");
       col?.querySelector(".ai-chat-sources")?.remove();
+      col?.querySelector(".ai-chat-recommendations")?.remove();
       const actions = col?.querySelector(".ai-chat-msg-actions");
       const sourceSection = createSourceSection(normalizedSources);
       if (col && actions && sourceSection) col.insertBefore(sourceSection, actions);
+      const recommendationSection = createRecommendationSection(normalizedSuggestions);
+      if (col && actions && recommendationSection) col.insertBefore(recommendationSection, actions);
       if (history.length && history[history.length - 1].role === "model") {
         history[history.length - 1] = { role: "model", parts: [{ text }] };
         if (normalizedSources.length) history[history.length - 1].sources = normalizedSources;
+        if (normalizedSuggestions.length) history[history.length - 1].suggestions = normalizedSuggestions;
         saveHistory(history);
       }
     }
@@ -315,8 +364,15 @@
         ]);
         return;
       }
-      history.forEach((message) => {
-        appendMessage(message.role === "user" ? "user" : "bot", message.parts[0].text, false, message.sources);
+      history.forEach((message, index) => {
+        const suggestions = index === history.length - 1 ? message.suggestions : [];
+        appendMessage(
+          message.role === "user" ? "user" : "bot",
+          message.parts[0].text,
+          false,
+          message.sources,
+          suggestions,
+        );
       });
       if (history[history.length - 1]?.role === "model") showRegenerateButton();
     }
@@ -349,6 +405,7 @@
       let resultText = null;
       let errorText = null;
       let resultSources = [];
+      let resultSuggestions = [];
       try {
         const response = await fetch(`${apiUrl}/api/chat`, {
           method: "POST",
@@ -367,6 +424,7 @@
         }
         resultText = payload.text;
         resultSources = normalizeSources(payload.sources);
+        resultSuggestions = normalizeSuggestions(payload.suggestions);
       } catch (error) {
         errorText =
           error.name === "AbortError"
@@ -384,8 +442,9 @@
 
       const finalText = resultText ?? `抱歉，AI 助理目前無法回答：${errorText}`;
       const finalSources = resultText ? resultSources : [];
-      if (replaceLastBot) replaceLastBotMessage(finalText, finalSources);
-      else appendMessage("bot", finalText, true, finalSources);
+      const finalSuggestions = resultText ? resultSuggestions : [];
+      if (replaceLastBot) replaceLastBotMessage(finalText, finalSources, finalSuggestions);
+      else appendMessage("bot", finalText, true, finalSources, finalSuggestions);
       showRegenerateButton();
       input.focus();
     }
@@ -396,6 +455,7 @@
       if (!message || waiting) return;
 
       document.querySelector(".ai-chat-suggestions")?.remove();
+      document.querySelectorAll(".ai-chat-recommendations").forEach((section) => section.remove());
       const priorHistory = history.slice(-maxHistoryMessages);
       appendMessage("user", message);
       input.value = "";

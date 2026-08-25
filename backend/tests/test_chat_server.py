@@ -24,7 +24,14 @@ def fake_embedding(text: str, dim: int = 32) -> list[float]:
 
 
 class FakeModels:
-    def __init__(self, text="ok", error=None):
+    def __init__(
+        self,
+        text=(
+            '{"answer":"Cloud Run 是受管平台。",'
+            '"suggestions":["自動擴縮怎麼運作？","Revision 要怎麼回滾？","Cold Start 怎麼改善？"]}'
+        ),
+        error=None,
+    ):
         self.text = text
         self.error = error
         self.calls = []
@@ -90,8 +97,17 @@ def test_backend_owns_prompt_and_uses_retrieved_chunks():
     assert "Cloud Run 是受管平台。" in prompt
     assert "員工 KM" in prompt
     assert "不要在正文輸出裸網址" in prompt
+    assert "同時提出正好 3 個" in prompt
+    assert models.calls[0]["config"].response_mime_type == "application/json"
+    assert models.calls[0]["config"].response_schema is chat_server.AssistantModelResponse
+    assert response.json()["text"] == "Cloud Run 是受管平台。"
     assert response.json()["sources"] == [
         {"title": "Test", "url": "https://example.test/cloud-run/"}
+    ]
+    assert response.json()["suggestions"] == [
+        "自動擴縮怎麼運作？",
+        "Revision 要怎麼回滾？",
+        "Cold Start 怎麼改善？",
     ]
 
 
@@ -106,6 +122,17 @@ def test_document_sources_uses_page_titles_and_deduplicates_urls():
         {"title": "HTTP API", "url": "https://example.test/http/"},
         {"title": "Cloud Run", "url": "https://example.test/run/"},
     ]
+
+
+def test_invalid_model_recommendations_return_generic_error():
+    models = FakeModels(text='{"answer":"ok","suggestions":["只有一題？"]}')
+    chat_server.client = SimpleNamespace(models=models)
+
+    with TestClient(chat_server.app) as http:
+        response = http.post("/api/chat", json={"history": [], "message": "test"})
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == chat_server.GENERIC_SERVICE_ERROR
 
 
 def test_client_cannot_override_system_instruction():

@@ -180,10 +180,12 @@ jobs:
               and (.sources | type == "array" and length >= 1)
               and any(.sources[];
                 (.title | type == "string" and length >= 1)
-                and (.url | startswith("https://caocharles.github.io/ai-deploy-docs/")))' \
+                and (.url | startswith("https://caocharles.github.io/ai-deploy-docs/")))
+              and (.suggestions | type == "array" and length == 3)
+              and all(.suggestions[]; type == "string" and length >= 1)' \
               <<<"${chat_response}" >/dev/null
           }
 
           retry 'health endpoint' check_health
           retry 'CORS preflight' check_cors
-          retry 'Gemini chat response with structured documentation sources' check_chat
+          retry 'Gemini chat response with sources and recommendations' check_chat
