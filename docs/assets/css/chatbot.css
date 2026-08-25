@@ -192,11 +192,18 @@
   background: var(--ai-chat-accent);
 }
 
+.ai-chat-col {
+  display: flex;
+  min-width: 0;
+  max-width: 82%;
+  flex-direction: column;
+}
+
 .ai-chat-user,
 .ai-chat-bot {
   min-width: 0;
   width: fit-content;
-  max-width: 82%;
+  max-width: 100%;
   margin: 0;
   padding: 0.7rem 0.85rem;
   border: 1px solid var(--ai-chat-border);
@@ -206,6 +213,7 @@
 }
 
 .ai-chat-user {
+  max-width: 82%;
   background: var(--ai-chat-user);
   border-color: var(--ai-chat-accent);
   border-bottom-right-radius: 0.2rem;
@@ -214,6 +222,39 @@
 .ai-chat-bot {
   background: var(--ai-chat-bot);
   border-bottom-left-radius: 0.2rem;
+}
+
+.ai-chat-msg-actions {
+  display: flex;
+  gap: 0.3rem;
+  margin: 0.3rem 0 0 0.15rem;
+}
+
+.ai-chat-copy {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  color: var(--ai-chat-muted);
+  background: var(--ai-chat-surface);
+  border: 1px solid var(--ai-chat-border);
+  border-radius: 0.4rem;
+  cursor: pointer;
+  font-size: 0.72rem;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.ai-chat-copy:hover {
+  color: var(--ai-chat-accent);
+  border-color: var(--ai-chat-accent);
+}
+
+.ai-chat-copy.is-copied {
+  color: #4caf50;
+  border-color: #4caf50;
 }
 
 @keyframes ai-chat-msg-in {
@@ -320,6 +361,41 @@
     opacity: 1;
     transform: translateY(-0.22rem);
   }
+}
+
+#ai-chat-actionbar {
+  display: flex;
+  justify-content: center;
+  background: var(--ai-chat-canvas);
+}
+
+#ai-chat-actionbar:empty {
+  display: none;
+}
+
+.ai-chat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.65rem;
+  padding: 0.45rem 0.95rem;
+  color: var(--ai-chat-text);
+  background: var(--ai-chat-surface);
+  border: 1px solid var(--ai-chat-border);
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  font-size: 0.72rem;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.ai-chat-pill:hover {
+  border-color: var(--ai-chat-accent);
+  transform: translateY(-1px);
+}
+
+.ai-chat-pill:active {
+  transform: translateY(0);
 }
 
 #ai-chat-form {
