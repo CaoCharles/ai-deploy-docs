@@ -91,7 +91,7 @@ BASE_SYSTEM_PROMPT = """你是《AI KM 系統實戰筆記》的 AI 助理。
 ## 回答規則
 1. 使用繁體中文，以初學者能理解的方式回答。
 2. 這是小型聊天視窗，不是文件頁面：預設用 1 到 3 段短文字或最多 5 點條列回答，不使用標題（#、##）、不分小節、不使用表格；只有使用者明確要求「詳細」「完整」「表格」時才展開更長的格式。
-3. 優先根據本站文件回答，並附上文件提供的完整網址。
+3. 優先根據本站文件回答，但不要在正文輸出裸網址、Markdown 連結或自行編造來源；系統會依檢索結果在回答下方另外呈現本站筆記標題與連結。
 4. 清楚區分一般技術觀念與 ai-asst-km 的實際系統實作、執行與部署現況。
 5. 不討論或臆測員工 KM、RAG、Prompt、內部資料與未公開機密。
 6. 不虛構 Project ID、Service URL、Secret、Token、帳號或線上設定。
@@ -253,6 +253,19 @@ def build_system_instruction(chunks: list[DocChunk]) -> str:
     )
 
 
+def document_sources(chunks: list[DocChunk], limit: int = 3) -> list[dict[str, str]]:
+    sources: list[dict[str, str]] = []
+    seen_urls: set[str] = set()
+    for chunk in chunks:
+        if chunk.url in seen_urls:
+            continue
+        seen_urls.add(chunk.url)
+        sources.append({"title": chunk.title, "url": chunk.url})
+        if len(sources) >= limit:
+            break
+    return sources
+
+
 class InMemoryRateLimiter:
     """Small per-instance sliding-window limiter for the public endpoint."""
 
@@ -389,7 +402,7 @@ def chat_endpoint(payload: ChatRequest):
         )
         if not response.text:
             raise RuntimeError("Gemini returned an empty response")
-        return {"text": response.text}
+        return {"text": response.text, "sources": document_sources(chunks)}
     except DocumentationUnavailable:
         logger.exception("Retrieval index is unavailable")
         return JSONResponse(status_code=503, content={"detail": GENERIC_SERVICE_ERROR})

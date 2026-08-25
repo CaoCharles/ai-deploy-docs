@@ -9,6 +9,7 @@
   const sessionKey = "aiDeployDocsChatSession";
   const maxMessageChars = 4000;
   const maxHistoryMessages = 20;
+  const logoMark = '<svg class="ai-chat-orb-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2L12 2Z"></path><circle cx="19" cy="5" r="1"></circle><circle cx="5" cy="18.5" r="0.8"></circle></svg>';
   let waiting = false;
 
   function sessionId() {
@@ -50,30 +51,50 @@
     return window.DOMPurify ? window.DOMPurify.sanitize(rendered) : rendered;
   }
 
+  function normalizeSources(value) {
+    if (!Array.isArray(value)) return [];
+    const seen = new Set();
+    return value
+      .map((source) => {
+        if (!source || typeof source.title !== "string" || typeof source.url !== "string") return null;
+        try {
+          const url = new URL(source.url);
+          if (url.href !== siteUrl && !url.href.startsWith(`${siteUrl}/`)) return null;
+          const title = source.title.trim().slice(0, 160);
+          if (!title || seen.has(url.href)) return null;
+          seen.add(url.href);
+          return { title, url: url.href };
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean)
+      .slice(0, 3);
+  }
+
   function injectWidget() {
     if (document.getElementById("ai-deploy-chatbot")) return;
     document.body.insertAdjacentHTML(
       "beforeend",
       `<button id="ai-chat-open" aria-label="開啟 AI 助理">
-        <span class="ai-chat-open-orb" aria-hidden="true">✦</span>
+        <span class="ai-chat-open-orb" aria-hidden="true">${logoMark}</span>
         <span class="ai-chat-open-label">AI 助理</span>
       </button>
       <section id="ai-deploy-chatbot" aria-label="AI 助理聊天視窗">
         <header class="ai-chat-header">
           <div class="ai-chat-brand">
-            <div class="ai-chat-header-avatar" aria-hidden="true">✦</div>
+            <div class="ai-chat-header-avatar" aria-hidden="true">${logoMark}</div>
             <span><strong>${chatbotName}</strong><small><i></i> 已連線 · 根據本站筆記回答</small></span>
           </div>
           <div class="ai-chat-header-actions">
-            <button id="ai-chat-clear" title="清除對話" aria-label="清除對話">↻</button>
-            <button id="ai-chat-expand" title="切換全螢幕" aria-label="切換全螢幕">⛶</button>
-            <button id="ai-chat-close" title="關閉" aria-label="關閉">×</button>
+            <button id="ai-chat-clear" title="開始新對話" aria-label="開始新對話"><svg class="ai-chat-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h7"></path><path d="M17 3v6"></path><path d="M14 6h6"></path></svg></button>
+            <button id="ai-chat-expand" title="放大聊天視窗" aria-label="放大聊天視窗"><svg class="ai-chat-icon ai-chat-icon--expand" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M16 3h3a2 2 0 0 1 2 2v3"></path><path d="M8 21H5a2 2 0 0 1-2-2v-3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path></svg><svg class="ai-chat-icon ai-chat-icon--collapse" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v3a2 2 0 0 1-2 2H3"></path><path d="M16 3v3a2 2 0 0 0 2 2h3"></path><path d="M8 21v-3a2 2 0 0 0-2-2H3"></path><path d="M16 21v-3a2 2 0 0 1 2-2h3"></path></svg></button>
+            <button id="ai-chat-close" title="關閉" aria-label="關閉"><svg class="ai-chat-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
           </div>
         </header>
         <div class="ai-chat-context">
           <span>知識庫</span>
           <strong>雲端部署筆記</strong>
-          <span class="ai-chat-context-safe">✓ 文件範圍</span>
         </div>
         <div id="ai-chat-messages" aria-live="polite"></div>
         <div id="ai-chat-actionbar"></div>
@@ -98,6 +119,7 @@
     const sendButton = document.getElementById("ai-chat-send");
     const form = document.getElementById("ai-chat-form");
     const counter = document.getElementById("ai-chat-counter");
+    const expandButton = document.getElementById("ai-chat-expand");
     let history = loadHistory();
     let activeController = null;
     let abortedByUser = false;
@@ -122,7 +144,7 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "ai-chat-pill";
-      button.innerHTML = '<span aria-hidden="true">↻</span> 重新生成';
+      button.innerHTML = '<svg class="ai-chat-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg><span>重新生成</span>';
       button.addEventListener("click", regenerate);
       actionbar.replaceChildren(button);
     }
@@ -132,22 +154,53 @@
         ?.writeText(item.innerText)
         .then(() => {
           button.classList.add("is-copied");
-          button.innerHTML = "✓";
+          button.querySelector(".ai-chat-action-label").textContent = "已複製";
           window.setTimeout(() => {
             button.classList.remove("is-copied");
-            button.innerHTML = "⧉";
+            button.querySelector(".ai-chat-action-label").textContent = "複製回答";
           }, 1200);
         })
         .catch(() => {});
     }
 
-    function appendMessage(role, text, persist = true) {
+    function createSourceSection(sources) {
+      const normalized = normalizeSources(sources);
+      if (!normalized.length) return null;
+
+      const section = document.createElement("section");
+      section.className = "ai-chat-sources";
+
+      const heading = document.createElement("div");
+      heading.className = "ai-chat-sources-heading";
+      heading.innerHTML = '<svg class="ai-chat-source-heading-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg><span>參考文件</span>';
+      section.appendChild(heading);
+
+      normalized.forEach((source) => {
+        const link = document.createElement("a");
+        link.className = "ai-chat-source-link";
+        link.href = source.url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+
+        const label = document.createElement("span");
+        label.textContent = source.title;
+        link.appendChild(label);
+        link.insertAdjacentHTML("beforeend", '<svg class="ai-chat-source-link-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg>');
+        section.appendChild(link);
+      });
+
+      return section;
+    }
+
+    function appendMessage(role, text, persist = true, sources = []) {
+      const normalizedSources = role === "user" ? [] : normalizeSources(sources);
       const row = document.createElement("div");
       row.className = role === "user" ? "ai-chat-row ai-chat-row--user" : "ai-chat-row ai-chat-row--bot";
 
       const avatar = document.createElement("div");
       avatar.className = "ai-chat-avatar";
-      avatar.textContent = role === "user" ? "你" : "✦";
+      if (role === "user") avatar.textContent = "你";
+      else avatar.innerHTML = logoMark;
       avatar.setAttribute("aria-hidden", "true");
 
       const item = document.createElement("article");
@@ -170,36 +223,54 @@
 
         const copyButton = document.createElement("button");
         copyButton.type = "button";
-        copyButton.className = "ai-chat-copy";
-        copyButton.innerHTML = "⧉";
+        copyButton.className = "ai-chat-message-action ai-chat-copy";
+        copyButton.innerHTML = '<svg class="ai-chat-action-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span class="ai-chat-action-label">複製回答</span>';
         copyButton.setAttribute("aria-label", "複製這則回覆");
         copyButton.addEventListener("click", () => copyMessageText(item, copyButton));
 
+        const followUpButton = document.createElement("button");
+        followUpButton.type = "button";
+        followUpButton.className = "ai-chat-message-action";
+        followUpButton.innerHTML = '<svg class="ai-chat-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10a6 6 0 0 1 6 6v5"></path></svg><span>繼續追問</span>';
+        followUpButton.addEventListener("click", () => input.focus());
+
         const actions = document.createElement("div");
         actions.className = "ai-chat-msg-actions";
-        actions.appendChild(copyButton);
+        actions.append(copyButton, followUpButton);
 
-        col.append(meta, item, actions);
+        col.append(meta, item);
+        const sourceSection = createSourceSection(normalizedSources);
+        if (sourceSection) col.appendChild(sourceSection);
+        col.appendChild(actions);
         row.append(avatar, col);
       }
 
       messages.appendChild(row);
       messages.scrollTop = messages.scrollHeight;
       if (persist) {
-        history.push({ role: role === "user" ? "user" : "model", parts: [{ text }] });
+        const entry = { role: role === "user" ? "user" : "model", parts: [{ text }] };
+        if (normalizedSources.length) entry.sources = normalizedSources;
+        history.push(entry);
         history = history.slice(-maxHistoryMessages);
         saveHistory(history);
       }
       return item;
     }
 
-    function replaceLastBotMessage(text) {
+    function replaceLastBotMessage(text, sources = []) {
+      const normalizedSources = normalizeSources(sources);
       const rows = messages.querySelectorAll(".ai-chat-row--bot");
       const lastRow = rows[rows.length - 1];
       const bubble = lastRow?.querySelector(".ai-chat-bot");
       if (bubble) bubble.innerHTML = renderMarkdown(text);
+      const col = lastRow?.querySelector(".ai-chat-answer");
+      col?.querySelector(".ai-chat-sources")?.remove();
+      const actions = col?.querySelector(".ai-chat-msg-actions");
+      const sourceSection = createSourceSection(normalizedSources);
+      if (col && actions && sourceSection) col.insertBefore(sourceSection, actions);
       if (history.length && history[history.length - 1].role === "model") {
         history[history.length - 1] = { role: "model", parts: [{ text }] };
+        if (normalizedSources.length) history[history.length - 1].sources = normalizedSources;
         saveHistory(history);
       }
     }
@@ -233,7 +304,7 @@
         const welcome = document.createElement("section");
         welcome.className = "ai-chat-welcome";
         welcome.innerHTML =
-          '<div class="ai-chat-welcome-orb" aria-hidden="true">✦</div>' +
+          `<div class="ai-chat-welcome-orb" aria-hidden="true">${logoMark}</div>` +
           '<h2>今天想了解什麼？</h2>' +
           '<p>我是你的雲端架構筆記助理。描述遇到的情境，我會從本站文件整理觀念、設定與下一步。</p>';
         messages.appendChild(welcome);
@@ -245,8 +316,9 @@
         return;
       }
       history.forEach((message) => {
-        appendMessage(message.role === "user" ? "user" : "bot", message.parts[0].text, false);
+        appendMessage(message.role === "user" ? "user" : "bot", message.parts[0].text, false, message.sources);
       });
+      if (history[history.length - 1]?.role === "model") showRegenerateButton();
     }
 
     function setWaiting(value) {
@@ -265,7 +337,7 @@
       const typing = document.createElement("div");
       typing.className = "ai-chat-row ai-chat-row--bot";
       typing.innerHTML =
-        '<div class="ai-chat-avatar" aria-hidden="true">✦</div>' +
+        `<div class="ai-chat-avatar" aria-hidden="true">${logoMark}</div>` +
         '<div class="ai-chat-typing" role="status" aria-label="正在整理文件內容"><span></span><span></span><span></span></div>';
       messages.appendChild(typing);
       messages.scrollTop = messages.scrollHeight;
@@ -276,12 +348,13 @@
 
       let resultText = null;
       let errorText = null;
+      let resultSources = [];
       try {
         const response = await fetch(`${apiUrl}/api/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            history: priorHistory,
+            history: priorHistory.map(({ role, parts }) => ({ role, parts })),
             message,
             session_id: sessionId(),
           }),
@@ -293,6 +366,7 @@
           throw new Error("後端沒有回傳文字內容");
         }
         resultText = payload.text;
+        resultSources = normalizeSources(payload.sources);
       } catch (error) {
         errorText =
           error.name === "AbortError"
@@ -309,8 +383,9 @@
       }
 
       const finalText = resultText ?? `抱歉，AI 助理目前無法回答：${errorText}`;
-      if (replaceLastBot) replaceLastBotMessage(finalText);
-      else appendMessage("bot", finalText);
+      const finalSources = resultText ? resultSources : [];
+      if (replaceLastBot) replaceLastBotMessage(finalText, finalSources);
+      else appendMessage("bot", finalText, true, finalSources);
       showRegenerateButton();
       input.focus();
     }
@@ -355,10 +430,16 @@
     });
     document.getElementById("ai-chat-close").addEventListener("click", () => {
       panel.classList.remove("is-open");
+      panel.classList.remove("is-fullscreen");
+      expandButton.title = "放大聊天視窗";
+      expandButton.setAttribute("aria-label", "放大聊天視窗");
       openButton.hidden = false;
     });
-    document.getElementById("ai-chat-expand").addEventListener("click", () => {
-      panel.classList.toggle("is-fullscreen");
+    expandButton.addEventListener("click", () => {
+      const isFullscreen = panel.classList.toggle("is-fullscreen");
+      const label = isFullscreen ? "還原聊天視窗" : "放大聊天視窗";
+      expandButton.title = label;
+      expandButton.setAttribute("aria-label", label);
     });
     document.getElementById("ai-chat-clear").addEventListener("click", () => {
       history = [];

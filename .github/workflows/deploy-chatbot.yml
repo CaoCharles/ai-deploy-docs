@@ -175,12 +175,15 @@ jobs:
             chat_response="$(curl --fail --silent --show-error "${service_url}/api/chat" \
               --header 'Content-Type: application/json' \
               --header 'Origin: https://caocharles.github.io' \
-              --data '{"history":[],"message":"Cloud Run 的 Revision 是什麼？請用一句話回答並附上本站文件連結。","session_id":"deployment-smoke-test"}')" || return 1
-            jq -e '.text | type == "string" and length >= 20
-              and contains("caocharles.github.io/ai-deploy-docs/")' \
+              --data '{"history":[],"message":"Cloud Run 的 Revision 是什麼？請用一句話回答。","session_id":"deployment-smoke-test"}')" || return 1
+            jq -e '(.text | type == "string" and length >= 20)
+              and (.sources | type == "array" and length >= 1)
+              and any(.sources[];
+                (.title | type == "string" and length >= 1)
+                and (.url | startswith("https://caocharles.github.io/ai-deploy-docs/")))' \
               <<<"${chat_response}" >/dev/null
           }
 
           retry 'health endpoint' check_health
           retry 'CORS preflight' check_cors
-          retry 'Gemini chat response with documentation link' check_chat
+          retry 'Gemini chat response with structured documentation sources' check_chat
