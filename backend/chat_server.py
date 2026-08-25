@@ -266,6 +266,101 @@ def document_sources(chunks: list[DocChunk], limit: int = 3) -> list[dict[str, s
     return sources
 
 
+RECOMMENDED_QUESTION_SETS: tuple[
+    tuple[tuple[str, ...], tuple[str, ...]], ...
+] = (
+    (
+        ("cloud run", "revision", "instance", "concurrency", "cold start", "冷啟動", "自動擴縮"),
+        (
+            "Cloud Run 的自動擴縮與 concurrency 怎麼搭配？",
+            "Revision 更新失敗時要怎麼回滾？",
+            "Cold Start 可以怎麼降低？",
+        ),
+    ),
+    (
+        ("flask", "fastapi", "gunicorn", "uvicorn", "wsgi", "asgi", "worker"),
+        (
+            "Gunicorn worker 數量要怎麼估算？",
+            "WSGI 和 ASGI 的差別是什麼？",
+            "Flask 與 FastAPI 該怎麼選？",
+        ),
+    ),
+    (
+        ("github actions", "ci/cd", "cicd", "workflow", "pipeline", "deploy trigger"),
+        (
+            "GitHub Actions 的 trigger、job 和 step 有什麼差別？",
+            "部署 Cloud Run 的 workflow 要有哪些步驟？",
+            "WIF 為什麼比 Service Account Key 安全？",
+        ),
+    ),
+    (
+        ("docker", "container", "image", "artifact registry"),
+        (
+            "Docker Image 要怎麼推送到 Artifact Registry？",
+            "Container 啟動失敗時要檢查什麼？",
+            "Dockerfile 怎麼設計得更適合 Cloud Run？",
+        ),
+    ),
+    (
+        ("secret manager", "secret", "iam", "workload identity", "service account", "wif"),
+        (
+            "Secret Manager 要怎麼掛載到 Cloud Run？",
+            "Runtime 與 Deployer Service Account 要怎麼分工？",
+            "WIF 的權限邊界要怎麼設定？",
+        ),
+    ),
+    (
+        ("jmeter", "tps", "latency", "p95", "p99", "throughput", "tpm", "rpm", "429", "效能", "壓測"),
+        (
+            "TPS、Latency 與 P95 分別代表什麼？",
+            "JMeter threads 與 Ramp-up 要怎麼設定？",
+            "遇到 HTTP 429 要怎麼判斷瓶頸？",
+        ),
+    ),
+    (
+        ("http", "get", "post", "rest", "request", "response", "api"),
+        (
+            "GET 與 POST 在實際 API 設計中該怎麼選？",
+            "HTTP 狀態碼與錯誤回應該怎麼設計？",
+            "可以給我一個 REST API 的實作範例嗎？",
+        ),
+    ),
+    (
+        ("frontend", "model api", "data api", "firebase", "mongodb", "系統邊界", "架構"),
+        (
+            "Frontend、Model API 與 Data API 要怎麼分工？",
+            "一次請求在系統中會經過哪些元件？",
+            "系統邊界與部署邊界有什麼不同？",
+        ),
+    ),
+)
+
+
+def recommended_questions(
+    query: str, chunks: list[DocChunk], limit: int = 3
+) -> list[str]:
+    def match(context: str) -> tuple[str, ...] | None:
+        normalized = context.casefold()
+        for keywords, questions in RECOMMENDED_QUESTION_SETS:
+            if any(keyword.casefold() in normalized for keyword in keywords):
+                return questions
+        return None
+
+    questions = match(query)
+    if questions is None:
+        retrieved_context = " ".join(
+            f"{chunk.title} {chunk.heading}" for chunk in chunks[:3]
+        )
+        questions = match(retrieved_context)
+    if questions is None:
+        questions = (
+            "這個主題在實際部署時怎麼應用？",
+            "有哪些常見錯誤需要注意？",
+            "可以用一個簡單範例說明嗎？",
+        )
+    return list(questions[:limit])
+
+
 class InMemoryRateLimiter:
     """Small per-instance sliding-window limiter for the public endpoint."""
 
@@ -402,7 +497,11 @@ def chat_endpoint(payload: ChatRequest):
         )
         if not response.text:
             raise RuntimeError("Gemini returned an empty response")
-        return {"text": response.text, "sources": document_sources(chunks)}
+        return {
+            "text": response.text,
+            "sources": document_sources(chunks),
+            "suggestions": recommended_questions(payload.message, chunks),
+        }
     except DocumentationUnavailable:
         logger.exception("Retrieval index is unavailable")
         return JSONResponse(status_code=503, content={"detail": GENERIC_SERVICE_ERROR})

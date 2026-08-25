@@ -93,6 +93,11 @@ def test_backend_owns_prompt_and_uses_retrieved_chunks():
     assert response.json()["sources"] == [
         {"title": "Test", "url": "https://example.test/cloud-run/"}
     ]
+    assert response.json()["suggestions"] == [
+        "Cloud Run 的自動擴縮與 concurrency 怎麼搭配？",
+        "Revision 更新失敗時要怎麼回滾？",
+        "Cold Start 可以怎麼降低？",
+    ]
 
 
 def test_document_sources_uses_page_titles_and_deduplicates_urls():
@@ -105,6 +110,32 @@ def test_document_sources_uses_page_titles_and_deduplicates_urls():
     assert chat_server.document_sources(chunks) == [
         {"title": "HTTP API", "url": "https://example.test/http/"},
         {"title": "Cloud Run", "url": "https://example.test/run/"},
+    ]
+
+
+def test_recommended_questions_use_query_before_retrieved_context():
+    chunks = [
+        make_chunk(
+            "Cloud Run",
+            "revision and instance",
+            title="Cloud Run",
+            url="https://example.test/run/",
+        )
+    ]
+
+    questions = chat_server.recommended_questions("GET 和 POST 有什麼差別？", chunks)
+
+    assert questions[0] == "GET 與 POST 在實際 API 設計中該怎麼選？"
+    assert len(questions) == 3
+
+
+def test_recommended_questions_fall_back_to_generic_prompts():
+    chunks = [make_chunk("其他", "unrelated", title="其他主題")]
+
+    assert chat_server.recommended_questions("請再說明", chunks) == [
+        "這個主題在實際部署時怎麼應用？",
+        "有哪些常見錯誤需要注意？",
+        "可以用一個簡單範例說明嗎？",
     ]
 
 
