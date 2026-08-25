@@ -24,7 +24,14 @@ def fake_embedding(text: str, dim: int = 32) -> list[float]:
 
 
 class FakeModels:
-    def __init__(self, text="ok", error=None):
+    def __init__(
+        self,
+        text=(
+            '{"answer":"Cloud Run 是受管平台。",'
+            '"suggestions":["自動擴縮怎麼運作？","Revision 要怎麼回滾？","Cold Start 怎麼改善？"]}'
+        ),
+        error=None,
+    ):
         self.text = text
         self.error = error
         self.calls = []
@@ -90,13 +97,17 @@ def test_backend_owns_prompt_and_uses_retrieved_chunks():
     assert "Cloud Run 是受管平台。" in prompt
     assert "員工 KM" in prompt
     assert "不要在正文輸出裸網址" in prompt
+    assert "同時提出正好 3 個" in prompt
+    assert models.calls[0]["config"].response_mime_type == "application/json"
+    assert models.calls[0]["config"].response_schema is chat_server.AssistantModelResponse
+    assert response.json()["text"] == "Cloud Run 是受管平台。"
     assert response.json()["sources"] == [
         {"title": "Test", "url": "https://example.test/cloud-run/"}
     ]
     assert response.json()["suggestions"] == [
-        "Cloud Run 的自動擴縮與 concurrency 怎麼搭配？",
-        "Revision 更新失敗時要怎麼回滾？",
-        "Cold Start 可以怎麼降低？",
+        "自動擴縮怎麼運作？",
+        "Revision 要怎麼回滾？",
+        "Cold Start 怎麼改善？",
     ]
 
 
@@ -113,30 +124,15 @@ def test_document_sources_uses_page_titles_and_deduplicates_urls():
     ]
 
 
-def test_recommended_questions_use_query_before_retrieved_context():
-    chunks = [
-        make_chunk(
-            "Cloud Run",
-            "revision and instance",
-            title="Cloud Run",
-            url="https://example.test/run/",
-        )
-    ]
+def test_invalid_model_recommendations_return_generic_error():
+    models = FakeModels(text='{"answer":"ok","suggestions":["只有一題？"]}')
+    chat_server.client = SimpleNamespace(models=models)
 
-    questions = chat_server.recommended_questions("GET 和 POST 有什麼差別？", chunks)
+    with TestClient(chat_server.app) as http:
+        response = http.post("/api/chat", json={"history": [], "message": "test"})
 
-    assert questions[0] == "GET 與 POST 在實際 API 設計中該怎麼選？"
-    assert len(questions) == 3
-
-
-def test_recommended_questions_fall_back_to_generic_prompts():
-    chunks = [make_chunk("其他", "unrelated", title="其他主題")]
-
-    assert chat_server.recommended_questions("請再說明", chunks) == [
-        "這個主題在實際部署時怎麼應用？",
-        "有哪些常見錯誤需要注意？",
-        "可以用一個簡單範例說明嗎？",
-    ]
+    assert response.status_code == 500
+    assert response.json()["detail"] == chat_server.GENERIC_SERVICE_ERROR
 
 
 def test_client_cannot_override_system_instruction():

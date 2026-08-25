@@ -215,7 +215,7 @@
 
       const heading = document.createElement("div");
       heading.className = "ai-chat-recommendations-heading";
-      heading.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a7 7 0 0 0-4 12.7V20l4-2 4 2v-4.3A7 7 0 0 0 12 3Z"></path><path d="M9.5 10a2.5 2.5 0 1 1 4.1 1.9c-.9.7-1.6 1.1-1.6 2.1"></path><path d="M12 16h.01"></path></svg><span>你可能還想問</span>';
+      heading.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.4 4.6L18 9l-4.6 1.4L12 15l-1.4-4.6L6 9l4.6-1.4L12 3Z"></path><path d="m18.5 14 .8 2.7 2.7.8-2.7.8-.8 2.7-.8-2.7-2.7-.8 2.7-.8.8-2.7Z"></path><path d="m5 3 .6 2L8 5.7l-2.4.7L5 8.5l-.6-2.1L2 5.7 4.4 5 5 3Z"></path></svg><span>推薦問題</span>';
       section.appendChild(heading);
 
       const list = document.createElement("div");
@@ -224,8 +224,7 @@
         const button = document.createElement("button");
         button.type = "button";
         button.className = "ai-chat-recommendation";
-        button.innerHTML = '<span></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>';
-        button.querySelector("span").textContent = question;
+        button.textContent = question;
         button.addEventListener("click", () => {
           if (waiting) return;
           input.value = question;
