@@ -294,6 +294,29 @@
   color: var(--ai-chat-accent);
 }
 
+.ai-chat-bot table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.ai-chat-bot th,
+.ai-chat-bot td {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--ai-chat-border);
+  white-space: normal;
+}
+
+.ai-chat-bot h1,
+.ai-chat-bot h2,
+.ai-chat-bot h3 {
+  margin: 0.6rem 0 0.3rem;
+  font-size: 0.85rem;
+}
+
 .ai-chat-suggestions {
   display: flex;
   flex-direction: column;
