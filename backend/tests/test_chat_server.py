@@ -89,6 +89,23 @@ def test_backend_owns_prompt_and_uses_retrieved_chunks():
     assert "AI KM 系統實戰筆記" in prompt
     assert "Cloud Run 是受管平台。" in prompt
     assert "員工 KM" in prompt
+    assert "不要在正文輸出裸網址" in prompt
+    assert response.json()["sources"] == [
+        {"title": "Test", "url": "https://example.test/cloud-run/"}
+    ]
+
+
+def test_document_sources_uses_page_titles_and_deduplicates_urls():
+    chunks = [
+        make_chunk("GET", "first", title="HTTP API", url="https://example.test/http/"),
+        make_chunk("POST", "second", title="HTTP API", url="https://example.test/http/"),
+        make_chunk("Runtime", "third", title="Cloud Run", url="https://example.test/run/"),
+    ]
+
+    assert chat_server.document_sources(chunks) == [
+        {"title": "HTTP API", "url": "https://example.test/http/"},
+        {"title": "Cloud Run", "url": "https://example.test/run/"},
+    ]
 
 
 def test_client_cannot_override_system_instruction():
