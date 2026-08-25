@@ -135,6 +135,14 @@ def test_invalid_model_recommendations_return_generic_error():
     assert response.json()["detail"] == chat_server.GENERIC_SERVICE_ERROR
 
 
+def test_model_response_schema_uses_gemini_supported_fields():
+    schema = chat_server.AssistantModelResponse.model_json_schema()
+
+    assert "additionalProperties" not in schema
+    assert schema["properties"]["suggestions"]["minItems"] == 3
+    assert schema["properties"]["suggestions"]["maxItems"] == 3
+
+
 def test_client_cannot_override_system_instruction():
     models = FakeModels()
     chat_server.client = SimpleNamespace(models=models)
