@@ -9,7 +9,7 @@
   const sessionKey = "aiDeployDocsChatSession";
   const maxMessageChars = 4000;
   const maxHistoryMessages = 20;
-  const logoMark = '<svg class="ai-chat-orb-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2L12 2Z"></path><circle cx="19" cy="5" r="1"></circle><circle cx="5" cy="18.5" r="0.8"></circle></svg>';
+  const logoMark = '<svg class="ai-chat-orb-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 7.1L21 12l-7.1 1.9L12 21l-1.9-7.1L3 12l7.1-1.9L12 3Z"></path></svg>';
   let waiting = false;
 
   function sessionId() {
@@ -91,7 +91,6 @@
       "beforeend",
       `<button id="ai-chat-open" aria-label="開啟 AI 助理">
         <span class="ai-chat-open-orb" aria-hidden="true">${logoMark}</span>
-        <span class="ai-chat-open-label">AI 助理</span>
       </button>
       <section id="ai-deploy-chatbot" aria-label="AI 助理聊天視窗">
         <header class="ai-chat-header">
@@ -198,12 +197,12 @@
       const normalized = normalizeSources(sources);
       if (!normalized.length) return null;
 
-      const section = document.createElement("section");
+      const section = document.createElement("details");
       section.className = "ai-chat-sources";
 
-      const heading = document.createElement("div");
+      const heading = document.createElement("summary");
       heading.className = "ai-chat-sources-heading";
-      heading.innerHTML = '<svg class="ai-chat-source-heading-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg><span>參考文件</span>';
+      heading.innerHTML = `<svg class="ai-chat-source-heading-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg><span>參考文件</span><span class="ai-chat-source-count">${normalized.length}</span><svg class="ai-chat-source-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>`;
       section.appendChild(heading);
 
       const list = document.createElement("div");
@@ -288,7 +287,7 @@
 
         const meta = document.createElement("div");
         meta.className = "ai-chat-answer-meta";
-        meta.innerHTML = '<strong>AI 筆記助理</strong><span>本站文件</span>';
+        meta.innerHTML = '<span class="ai-chat-answer-role"><b>AI</b><strong>雲端架構助理</strong></span><span class="ai-chat-answer-scope">本站文件</span>';
 
         const copyButton = document.createElement("button");
         copyButton.type = "button";
