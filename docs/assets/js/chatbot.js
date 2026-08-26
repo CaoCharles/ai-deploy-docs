@@ -9,7 +9,7 @@
   const sessionKey = "aiDeployDocsChatSession";
   const maxMessageChars = 4000;
   const maxHistoryMessages = 20;
-  const logoMark = '<svg class="ai-chat-orb-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.9 7.1L21 12l-7.1 1.9L12 21l-1.9-7.1L3 12l7.1-1.9L12 3Z"></path></svg>';
+  const logoMark = `<img class="ai-chat-orb-mark" src="${siteUrl}/assets/chatbot-logo.webp" alt="" decoding="async">`;
   let waiting = false;
 
   function sessionId() {
