@@ -21,6 +21,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from google import genai
+from google.genai import errors as genai_errors
 from google.genai import types
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -62,6 +63,9 @@ ALLOWED_ORIGINS = tuple(
 )
 
 MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
+FALLBACK_MODEL_NAME = os.environ.get(
+    "GEMINI_FALLBACK_MODEL", "gemini-3.1-flash-lite"
+).strip()
 EMBEDDING_MODEL = os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001")
 CONTENT_URL = os.environ.get(
     "CONTENT_URL",
@@ -85,6 +89,8 @@ RETRIEVAL_TOP_K = env_int("RETRIEVAL_TOP_K", 6, 1, 20)
 RATE_LIMIT_REQUESTS = env_int("RATE_LIMIT_REQUESTS", 20, 1, 1_000)
 RATE_LIMIT_WINDOW_SECONDS = env_int("RATE_LIMIT_WINDOW_SECONDS", 60, 1, 3_600)
 GENERIC_SERVICE_ERROR = "AI 助理暫時無法回應，請稍後再試。"
+TRANSIENT_GEMINI_STATUS_CODES = frozenset({408, 429, 500, 502, 503, 504})
+TRANSIENT_RETRY_AFTER_SECONDS = 3
 
 BASE_SYSTEM_PROMPT = """你是《AI KM 系統實戰筆記》的 AI 助理。
 
@@ -357,6 +363,47 @@ class AssistantModelResponse(BaseModel):
         return normalized
 
 
+def generation_model_names() -> tuple[str, ...]:
+    if FALLBACK_MODEL_NAME and FALLBACK_MODEL_NAME != MODEL_NAME:
+        return MODEL_NAME, FALLBACK_MODEL_NAME
+    return (MODEL_NAME,)
+
+
+def generate_assistant_response(
+    contents: list[types.Content], chunks: list[DocChunk]
+) -> AssistantModelResponse:
+    """Generate a structured answer, falling back only on transient API errors."""
+
+    config = types.GenerateContentConfig(
+        system_instruction=build_system_instruction(chunks),
+        thinking_config=types.ThinkingConfig(thinking_level="low"),
+        response_mime_type="application/json",
+        response_schema=AssistantModelResponse,
+    )
+    model_names = generation_model_names()
+
+    for index, model_name in enumerate(model_names):
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=contents,
+                config=config,
+            )
+            if not response.text:
+                raise RuntimeError("Gemini returned an empty response")
+            return AssistantModelResponse.model_validate_json(response.text)
+        except genai_errors.APIError as exc:
+            has_fallback = index + 1 < len(model_names)
+            if exc.code not in TRANSIENT_GEMINI_STATUS_CODES or not has_fallback:
+                raise
+            logger.warning(
+                "Primary Gemini request unavailable status=%s; trying fallback model",
+                exc.code,
+            )
+
+    raise RuntimeError("No Gemini generation model is configured")
+
+
 app = FastAPI(title="AI Deploy Docs Chatbot", docs_url=None, redoc_url=None)
 app.add_middleware(
     CORSMiddleware,
@@ -424,19 +471,7 @@ def chat_endpoint(payload: ChatRequest):
             )
         )
 
-        response = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=contents,
-            config=types.GenerateContentConfig(
-                system_instruction=build_system_instruction(chunks),
-                thinking_config=types.ThinkingConfig(thinking_level="low"),
-                response_mime_type="application/json",
-                response_schema=AssistantModelResponse,
-            ),
-        )
-        if not response.text:
-            raise RuntimeError("Gemini returned an empty response")
-        structured_response = AssistantModelResponse.model_validate_json(response.text)
+        structured_response = generate_assistant_response(contents, chunks)
         return {
             "text": structured_response.answer,
             "sources": document_sources(chunks),
@@ -445,6 +480,16 @@ def chat_endpoint(payload: ChatRequest):
     except DocumentationUnavailable:
         logger.exception("Retrieval index is unavailable")
         return JSONResponse(status_code=503, content={"detail": GENERIC_SERVICE_ERROR})
+    except genai_errors.APIError as exc:
+        if exc.code in TRANSIENT_GEMINI_STATUS_CODES:
+            logger.warning("Gemini generation unavailable status=%s", exc.code)
+            return JSONResponse(
+                status_code=503,
+                content={"detail": GENERIC_SERVICE_ERROR},
+                headers={"Retry-After": str(TRANSIENT_RETRY_AFTER_SECONDS)},
+            )
+        logger.exception("Gemini request rejected model=%s", MODEL_NAME)
+        return JSONResponse(status_code=500, content={"detail": GENERIC_SERVICE_ERROR})
     except Exception:
         logger.exception("Gemini request failed model=%s", MODEL_NAME)
         return JSONResponse(status_code=500, content={"detail": GENERIC_SERVICE_ERROR})
