@@ -85,6 +85,23 @@
       .slice(0, 3);
   }
 
+  function normalizeTimestamp(value) {
+    const date = value ? new Date(value) : new Date();
+    return Number.isNaN(date.getTime()) ? new Date() : date;
+  }
+
+  function createMessageTime(value) {
+    const date = normalizeTimestamp(value);
+    const period = date.getHours() < 12 ? "上午" : "下午";
+    const hour = date.getHours() % 12 || 12;
+    const pad = (number) => String(number).padStart(2, "0");
+    const time = document.createElement("time");
+    time.className = "ai-chat-message-time";
+    time.dateTime = date.toISOString();
+    time.textContent = `${pad(date.getMonth() + 1)}/${pad(date.getDate())} ${period}${pad(hour)}:${pad(date.getMinutes())}`;
+    return time;
+  }
+
   function injectWidget() {
     if (document.getElementById("ai-deploy-chatbot")) return;
     document.body.insertAdjacentHTML(
@@ -138,7 +155,6 @@
 
     function clearActionbar() {
       actionbar.replaceChildren();
-      messages.querySelectorAll(".ai-chat-regenerate").forEach((button) => button.remove());
     }
 
     function showStopButton() {
@@ -151,20 +167,6 @@
         activeController?.abort();
       });
       actionbar.replaceChildren(button);
-    }
-
-    function showRegenerateButton() {
-      const botRows = messages.querySelectorAll(".ai-chat-row--bot");
-      const actions = botRows[botRows.length - 1]?.querySelector(".ai-chat-msg-actions");
-      if (!actions) return;
-
-      actions.querySelector(".ai-chat-regenerate")?.remove();
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "ai-chat-message-action ai-chat-regenerate";
-      button.innerHTML = '<svg class="ai-chat-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path></svg><span>重新生成</span>';
-      button.addEventListener("click", regenerate);
-      actions.appendChild(button);
     }
 
     function scrollLatestExchangeToStart(behavior = "smooth") {
@@ -184,10 +186,12 @@
         ?.writeText(item.innerText)
         .then(() => {
           button.classList.add("is-copied");
-          button.querySelector(".ai-chat-action-label").textContent = "已複製";
+          button.setAttribute("aria-label", "已複製");
+          button.dataset.tooltip = "已複製";
           window.setTimeout(() => {
             button.classList.remove("is-copied");
-            button.querySelector(".ai-chat-action-label").textContent = "複製回答";
+            button.setAttribute("aria-label", "複製回答");
+            button.dataset.tooltip = "複製回答";
           }, 1200);
         })
         .catch(() => {});
@@ -202,7 +206,7 @@
 
       const heading = document.createElement("summary");
       heading.className = "ai-chat-sources-heading";
-      heading.innerHTML = `<svg class="ai-chat-source-heading-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg><span>參考文件</span><span class="ai-chat-source-count">${normalized.length}</span><svg class="ai-chat-source-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>`;
+      heading.innerHTML = `<svg class="ai-chat-source-heading-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"></path><path d="M15 3v4h4"></path><path d="M9 11h6M9 15h6M9 19h4"></path></svg><span>參考文件</span><span class="ai-chat-source-count">${normalized.length}</span><svg class="ai-chat-source-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>`;
       section.appendChild(heading);
 
       const list = document.createElement("div");
@@ -215,7 +219,10 @@
         link.target = "_blank";
         link.rel = "noopener noreferrer";
 
+        link.insertAdjacentHTML("beforeend", '<span class="ai-chat-source-article"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"></path><path d="M15 3v4h4"></path><path d="M9 11h6M9 15h6M9 19h4"></path></svg></span>');
+
         const label = document.createElement("span");
+        label.className = "ai-chat-source-title";
         label.textContent = source.title;
         link.appendChild(label);
         link.insertAdjacentHTML("beforeend", '<svg class="ai-chat-source-link-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg>');
@@ -259,9 +266,10 @@
       return section;
     }
 
-    function appendMessage(role, text, persist = true, sources = [], suggestions = []) {
+    function appendMessage(role, text, persist = true, sources = [], suggestions = [], createdAt = null) {
       const normalizedSources = role === "user" ? [] : normalizeSources(sources);
       const normalizedSuggestions = role === "user" ? [] : normalizeSuggestions(suggestions);
+      const messageDate = normalizeTimestamp(createdAt);
       const row = document.createElement("div");
       row.className = role === "user" ? "ai-chat-row ai-chat-row--user" : "ai-chat-row ai-chat-row--bot";
 
@@ -280,7 +288,10 @@
       }
 
       if (role === "user") {
-        row.append(item, avatar);
+        const col = document.createElement("div");
+        col.className = "ai-chat-col ai-chat-user-col";
+        col.append(item, createMessageTime(messageDate));
+        row.append(col, avatar);
       } else {
         const col = document.createElement("div");
         col.className = "ai-chat-col ai-chat-answer";
@@ -292,13 +303,14 @@
         const copyButton = document.createElement("button");
         copyButton.type = "button";
         copyButton.className = "ai-chat-message-action ai-chat-copy";
-        copyButton.innerHTML = '<svg class="ai-chat-action-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span class="ai-chat-action-label">複製回答</span>';
-        copyButton.setAttribute("aria-label", "複製這則回覆");
+        copyButton.innerHTML = '<svg class="ai-chat-action-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+        copyButton.setAttribute("aria-label", "複製回答");
+        copyButton.dataset.tooltip = "複製回答";
         copyButton.addEventListener("click", () => copyMessageText(item, copyButton));
 
         const actions = document.createElement("div");
         actions.className = "ai-chat-msg-actions";
-        actions.appendChild(copyButton);
+        actions.append(createMessageTime(messageDate), copyButton);
 
         col.append(meta, item);
         const sourceSection = createSourceSection(normalizedSources);
@@ -312,7 +324,11 @@
       messages.appendChild(row);
       messages.scrollTop = messages.scrollHeight;
       if (persist) {
-        const entry = { role: role === "user" ? "user" : "model", parts: [{ text }] };
+        const entry = {
+          role: role === "user" ? "user" : "model",
+          parts: [{ text }],
+          createdAt: messageDate.toISOString(),
+        };
         if (normalizedSources.length) entry.sources = normalizedSources;
         if (normalizedSuggestions.length) entry.suggestions = normalizedSuggestions;
         history.push(entry);
@@ -320,29 +336,6 @@
         saveHistory(history);
       }
       return item;
-    }
-
-    function replaceLastBotMessage(text, sources = [], suggestions = []) {
-      const normalizedSources = normalizeSources(sources);
-      const normalizedSuggestions = normalizeSuggestions(suggestions);
-      const rows = messages.querySelectorAll(".ai-chat-row--bot");
-      const lastRow = rows[rows.length - 1];
-      const bubble = lastRow?.querySelector(".ai-chat-bot");
-      if (bubble) bubble.innerHTML = renderMarkdown(text);
-      const col = lastRow?.querySelector(".ai-chat-answer");
-      col?.querySelector(".ai-chat-sources")?.remove();
-      col?.querySelector(".ai-chat-recommendations")?.remove();
-      const actions = col?.querySelector(".ai-chat-msg-actions");
-      const sourceSection = createSourceSection(normalizedSources);
-      if (col && actions && sourceSection) col.insertBefore(sourceSection, actions);
-      const recommendationSection = createRecommendationSection(normalizedSuggestions);
-      if (col && actions && recommendationSection) col.insertBefore(recommendationSection, actions);
-      if (history.length && history[history.length - 1].role === "model") {
-        history[history.length - 1] = { role: "model", parts: [{ text }] };
-        if (normalizedSources.length) history[history.length - 1].sources = normalizedSources;
-        if (normalizedSuggestions.length) history[history.length - 1].suggestions = normalizedSuggestions;
-        saveHistory(history);
-      }
     }
 
     function renderSuggestions(questions) {
@@ -393,10 +386,10 @@
           false,
           message.sources,
           suggestions,
+          message.createdAt,
         );
       });
       if (history[history.length - 1]?.role === "model") {
-        showRegenerateButton();
         scrollLatestExchangeToStart("auto");
       }
     }
@@ -408,7 +401,7 @@
       panel.classList.toggle("is-waiting", value);
     }
 
-    async function requestReply(message, priorHistory, replaceLastBot = false) {
+    async function requestReply(message, priorHistory) {
       clearActionbar();
       abortedByUser = false;
       setWaiting(true);
@@ -467,9 +460,7 @@
       const finalText = resultText ?? `抱歉，AI 助理目前無法回答：${errorText}`;
       const finalSources = resultText ? resultSources : [];
       const finalSuggestions = resultText ? resultSuggestions : [];
-      if (replaceLastBot) replaceLastBotMessage(finalText, finalSources, finalSuggestions);
-      else appendMessage("bot", finalText, true, finalSources, finalSuggestions);
-      showRegenerateButton();
+      appendMessage("bot", finalText, true, finalSources, finalSuggestions);
       window.requestAnimationFrame(() => scrollLatestExchangeToStart());
       input.focus();
     }
@@ -495,16 +486,7 @@
         return;
       }
 
-      await requestReply(message, priorHistory, false);
-    }
-
-    async function regenerate() {
-      if (waiting) return;
-      const lastUserEntry = [...history].reverse().find((entry) => entry.role === "user");
-      if (!lastUserEntry) return;
-      const idx = history.lastIndexOf(lastUserEntry);
-      const priorHistory = history.slice(0, idx);
-      await requestReply(lastUserEntry.parts[0].text, priorHistory, true);
+      await requestReply(message, priorHistory);
     }
 
     openButton.addEventListener("click", () => {
