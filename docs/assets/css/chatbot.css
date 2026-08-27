@@ -1,35 +1,20 @@
-:root {
-  --ai-chat-surface: #ffffff;
-  --ai-chat-canvas: #f5f6fb;
-  --ai-chat-text: #24263a;
-  --ai-chat-muted: #70768a;
-  --ai-chat-border: #e1e3ed;
-  --ai-chat-accent: #6b4bc3;
-  --ai-chat-accent-strong: #5932ad;
-  --ai-chat-accent-soft: #f1edfb;
-  --ai-chat-bot: #ffffff;
-  --ai-chat-user: #5a67e8;
-  --ai-chat-context: #f8f8fc;
-  --ai-chat-success: #39946a;
-  --ai-chat-shadow: 0 26px 76px rgba(42, 38, 84, 0.22);
-  --ai-chat-orb: radial-gradient(circle at 26% 22%, rgba(255, 255, 255, 0.92) 0 4%, rgba(255, 255, 255, 0.18) 18%, transparent 36%), linear-gradient(135deg, #23c9dd 0%, #4d7dff 42%, #7357dd 72%, #d66be4 100%);
-  --ai-chat-orb-shadow: 0 6px 18px rgba(77, 125, 255, 0.28), 0 0 22px rgba(35, 201, 221, 0.18);
-}
-
+:root,
 [data-md-color-scheme="slate"] {
-  --ai-chat-surface: #1e252b;
-  --ai-chat-canvas: #151b20;
-  --ai-chat-text: #edf2f5;
-  --ai-chat-muted: #aeb9c1;
-  --ai-chat-border: #36424b;
-  --ai-chat-accent: #a88de8;
-  --ai-chat-accent-strong: #c1adf1;
-  --ai-chat-accent-soft: #352b4d;
-  --ai-chat-bot: #222b32;
-  --ai-chat-user: #6755c8;
-  --ai-chat-context: #192127;
-  --ai-chat-success: #71d5a3;
-  --ai-chat-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+  --ai-chat-surface: #08090d;
+  --ai-chat-canvas: #05060a;
+  --ai-chat-text: #f7f8fc;
+  --ai-chat-muted: #a1a7b6;
+  --ai-chat-border: #262b38;
+  --ai-chat-accent: #7867ff;
+  --ai-chat-accent-strong: #aeb7ff;
+  --ai-chat-accent-soft: #18162a;
+  --ai-chat-bot: #0d0f15;
+  --ai-chat-user: #6655df;
+  --ai-chat-context: #0b0d12;
+  --ai-chat-success: #46d89a;
+  --ai-chat-shadow: 0 28px 90px rgba(0, 0, 0, 0.68), 0 0 0 1px rgba(112, 126, 255, 0.08);
+  --ai-chat-orb: radial-gradient(circle at 26% 22%, rgba(255, 255, 255, 0.92) 0 4%, rgba(255, 255, 255, 0.18) 18%, transparent 36%), linear-gradient(135deg, #23c9dd 0%, #4d7dff 42%, #7357dd 72%, #d66be4 100%);
+  --ai-chat-orb-shadow: 0 6px 20px rgba(77, 125, 255, 0.34), 0 0 24px rgba(35, 201, 221, 0.2);
 }
 
 #ai-chat-open {
@@ -108,6 +93,7 @@
   overflow: hidden;
   flex-direction: column;
   color: var(--ai-chat-text);
+  color-scheme: dark;
   background: var(--ai-chat-surface);
   border: 1px solid var(--ai-chat-border);
   border-radius: 1.15rem;
