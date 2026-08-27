@@ -6,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
+from google.genai import errors as genai_errors
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND_DIR))
@@ -48,6 +49,28 @@ class FakeModels:
         texts = contents if isinstance(contents, list) else [contents]
         embeddings = [SimpleNamespace(values=fake_embedding(text)) for text in texts]
         return SimpleNamespace(embeddings=embeddings)
+
+
+class ModelAwareFakeModels(FakeModels):
+    def __init__(self, failing_statuses=None, **kwargs):
+        super().__init__(**kwargs)
+        self.failing_statuses = failing_statuses or {}
+
+    def generate_content(self, **kwargs):
+        self.calls.append(kwargs)
+        status_code = self.failing_statuses.get(kwargs["model"])
+        if status_code:
+            raise genai_errors.ServerError(
+                status_code,
+                {
+                    "error": {
+                        "code": status_code,
+                        "message": "temporary upstream failure",
+                        "status": "UNAVAILABLE",
+                    }
+                },
+            )
+        return SimpleNamespace(text=self.text)
 
 
 def fake_embedder(texts: list[str], task_type: str) -> list[list[float]]:
@@ -109,6 +132,48 @@ def test_backend_owns_prompt_and_uses_retrieved_chunks():
         "Revision 要怎麼回滾？",
         "Cold Start 怎麼改善？",
     ]
+
+
+def test_transient_primary_failure_uses_fallback_model():
+    models = ModelAwareFakeModels(
+        failing_statuses={chat_server.MODEL_NAME: 503}
+    )
+    chat_server.client = SimpleNamespace(models=models)
+
+    with TestClient(chat_server.app) as http:
+        response = http.post(
+            "/api/chat",
+            json={"history": [], "message": "Cloud Run 是什麼？", "session_id": "s1"},
+        )
+
+    assert response.status_code == 200
+    assert [call["model"] for call in models.calls] == [
+        chat_server.MODEL_NAME,
+        chat_server.FALLBACK_MODEL_NAME,
+    ]
+    assert response.json()["text"] == "Cloud Run 是受管平台。"
+
+
+def test_all_generation_models_unavailable_return_retryable_503():
+    models = ModelAwareFakeModels(
+        failing_statuses={
+            chat_server.MODEL_NAME: 503,
+            chat_server.FALLBACK_MODEL_NAME: 503,
+        }
+    )
+    chat_server.client = SimpleNamespace(models=models)
+
+    with TestClient(chat_server.app) as http:
+        response = http.post(
+            "/api/chat",
+            json={"history": [], "message": "Cloud Run 是什麼？", "session_id": "s1"},
+        )
+
+    assert response.status_code == 503
+    assert response.headers["Retry-After"] == str(
+        chat_server.TRANSIENT_RETRY_AFTER_SECONDS
+    )
+    assert response.json()["detail"] == chat_server.GENERIC_SERVICE_ERROR
 
 
 def test_document_sources_uses_page_titles_and_deduplicates_urls():
