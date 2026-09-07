@@ -35,6 +35,8 @@ flowchart LR
 
 這篇只追蹤上圖的 Runtime 路徑。GitHub Actions、Docker build 與 Cloud Run deploy 屬於 Deployment，會放在 CI/CD 分類。
 
+此圖聚焦核心提問鏈路；KM Monitor 另可唯讀 MongoDB，見[資料邊界](storage_data_boundaries.md)。[Hosting、rewrite 與 CORS](firebase_hosting_request_paths.md)則補充主站、Monitor 與 Eval 的入口差異。
+
 ## 前置知識
 
 可以先閱讀[雲端 API 系統的邊界與部署流程](system_boundaries_and_deployment_flow.md)，能分辨 Runtime 與 Deployment 即可。不需要先理解 RAG、向量資料庫或模型 Prompt。
@@ -61,7 +63,7 @@ flowchart LR
 | Data API | Flask、Gunicorn | Cloud Run | 驗證資料擁有者、保存與查詢 session、回饋、刪除資料 |
 
 !!! example "ai-asst-km 實際做法"
-    Model API 只負責回答與唯讀歷史，不保存本輪對話；Data API 不產生回答，只管理聊天資料。正式寫入只有「Frontend → Data API」一條路徑，避免同一輪被重複保存。
+    在本篇追蹤的聊天流程中，Model API 只負責回答與唯讀歷史，不保存本輪對話；Frontend 透過 Data API 寫入。Eval 或持久化壓測 client 也能呼叫 Data API，不能把這條聊天路徑理解成整個系統唯一的呼叫者。
 
 ## 登入後，每個 API 請求如何證明身分
 
@@ -135,6 +137,8 @@ Model API 回傳的不是單一字串，而是一個 Response Envelope。外層�
 
 Frontend 使用這個信封建立畫面上的助理訊息。
 
+2026-08-28 的前端原始碼另支援 SSE：收到 token 時先顯示暫時內容，取得完整 final 後才形成可保存結果。它需要相容的 ASGI 端點與串流開關；本輪未確認 Firebase live 是否開啟。JSON／SSE 的程式與實驗證據見 [JMeter 筆記](jmeter_load_testing.md)，不能由前端有 `predictStream()` 推定主 Flask 服務已轉成 ASGI。
+
 ### 步驟 5：Frontend 非同步保存本輪對話
 
 只有 Model API 成功回覆後，Frontend 才呼叫 Data API 保存：
@@ -173,7 +177,7 @@ Data API 再把本輪 append 到 MongoDB Atlas 的 session history。這個保�
 
 ## 實際設定查證
 
-以下結論以三個 Repository 的最新 `origin/main` 為準；未合併的本機功能分支不列為正式現況。
+下表保留 2026-08-22 的原始程式查證基準，不表示目前最新遠端或部署狀態。2026-09-07 的本機版本、線上 Revision 與查證限制統一記錄於 [GCP 資源地圖](gcp_resource_map.md)。
 
 | 查證項目 | 現行結論 | 來源 | 查證日期 |
 |---|---|---|---|
@@ -204,7 +208,7 @@ Data API 再把本輪 append 到 MongoDB Atlas 的 session history。這個保�
 - Firebase Hosting 傳送前端檔案，真正的 React 程式在瀏覽器執行。
 - Browser 使用 JWT 呼叫 Model API 與 Data API；Model API 用唯讀 service token 查歷史。
 - Model API 產生回答，Data API 管理 session，MongoDB Atlas 保存資料。
-- 正式寫入只有 Frontend → Data API 一條路徑。
+- 在聊天流程中，由 Frontend → Data API 保存本輪，Model API 不另寫一次。
 - 畫面顯示回答與歷史成功保存是兩個不同結果，排錯時要分開確認。
 
 接著閱讀：[HTTP Request、GET、POST 與 REST API](http_get_post_rest_api.md)。

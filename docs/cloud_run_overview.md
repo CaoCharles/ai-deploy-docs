@@ -45,6 +45,8 @@ flowchart LR
 2. [環境變數、GitHub Secrets 與 Secret Manager](configuration_and_secrets.md)
 3. [Flask、FastAPI、Gunicorn 與 Uvicorn](flask_fastapi_gunicorn_uvicorn.md)
 4. [JMeter、TPS、延遲與壓力測試](jmeter_load_testing.md)
+5. [Image、Revision、回滾與設定漂移](revisions_rollbacks_drift.md)
+6. [GCP 資源全貌與維運地圖](gcp_resource_map.md)
 
 ## 實際專案案例
 

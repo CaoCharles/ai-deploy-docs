@@ -1,5 +1,5 @@
 site_name: 雲端架構與 API 部署筆記
-site_description: 從 HTTP API、Python Web Server 與 Container，到 GitHub Actions、Cloud Run、負載測試與雲端模型容量規劃
+site_description: 以通用原理與員工 KM 實際案例，學習 HTTP API、GCP 資源、身分權限、部署、資料邊界、維運與容量規劃
 site_author: Charles Cao
 site_url: https://caocharles.github.io/ai-deploy-docs/
 copyright: Copyright &copy; 2026 Charles Cao - 筆記製作者
@@ -124,10 +124,19 @@ nav:
       - Cloud Run 學習路徑: cloud_run_overview.md
       - Service、Revision、Instance 與擴縮: cloud_run_core_concepts.md
       - 環境變數、Secrets 與 Secret Manager: configuration_and_secrets.md
+      - Image、Revision、回滾與設定漂移: revisions_rollbacks_drift.md
+  - GCP 與維運:
+      - GCP 資源全貌與 KM 元件: gcp_resource_map.md
+      - IAM、Service Account、WIF 與 JWT: iam_service_accounts_wif_jwt.md
+      - Firebase Hosting、rewrite 與 CORS: firebase_hosting_request_paths.md
+      - Cloud Storage、暫存與 MongoDB: storage_data_boundaries.md
+      - Cloud Scheduler 與 KM Monitor: scheduler_monitor.md
+      - Logging、Monitoring 與故障判讀: logging_monitoring_troubleshooting.md
   - 效能與容量:
       - 效能測試學習路徑: performance_overview.md
       - JMeter、TPS、延遲與壓力測試: jmeter_load_testing.md
       - Azure OpenAI 的 TPM、RPM 與 429: azure_openai_quota.md
+      - GCP 成本與整體容量: gcp_cost_capacity.md
   - 實際架構案例:
       - 雲端 API 系統邊界與部署流程: system_boundaries_and_deployment_flow.md
       - 一次 API 請求如何流動: runtime_request_flow.md

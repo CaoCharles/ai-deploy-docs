@@ -95,6 +95,8 @@ Vite build 會把 `VITE_*` 的值編入瀏覽器下載的 JavaScript。使用者
 
 ## 什麼是設定漂移？
 
+本篇先區分設定存放位置；若要比較 Repository、線上 Revision、`latest` Secret 與回滾邊界，接續閱讀 [Image、Revision、回滾與設定漂移](revisions_rollbacks_drift.md)。WIF 與應用程式登入的差異另見 [IAM、Service Account 與 JWT](iam_service_accounts_wif_jwt.md)。
+
 設定漂移（Configuration Drift）是「程式碼宣告的設定」與「雲端目前實際使用的設定」不一致。
 
 例如：

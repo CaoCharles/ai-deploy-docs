@@ -15,7 +15,7 @@ GitHub Actions 把 Image 推送到 Artifact Registry 後，會執行 `gcloud run
 
 - [ ] 分辨 Service、Revision 與 Instance。
 - [ ] 理解部署、流量、擴縮與 Cold Start 的關係。
-- [ ] 使用唯讀指令查看兩支 API 的部署狀態。
+- [ ] 解讀兩支 API 的已確認部署設定與其時間範圍。
 
 ## 這篇筆記涵蓋的範圍
 
@@ -68,7 +68,7 @@ flowchart TB
 1. `gcloud run deploy` 指定新的 Image 與部署設定。
 2. Cloud Run 建立新的 Revision。
 3. 新 Revision 啟動 Container，並確認能接收請求。
-4. Service 將流量導向新 Revision。
+4. Service 依部署方式將流量導向新 Revision；候選版本也可暫不接正式流量。
 5. Cloud Run 按照請求量調整 Instance 數量。
 
 Revision 不會被原地修改。這讓每個版本都有明確的 Image 與設定，也讓流量切換及回滾有可追蹤的目標。
@@ -90,7 +90,7 @@ Revision 不會被原地修改。這讓每個版本都有明確的 Image 與設�
 Model API 的資源與 Timeout 較高，因為啟動和請求處理較重；Data API 主要處理資料存取，因此設定較小。
 
 !!! note "Cloud Run Timeout 與 Gunicorn Timeout 是兩層限制"
-    Cloud Run 控制平台願意等待請求多久；Gunicorn 控制 worker 最長可處理多久。任一層先到期，都可能讓請求失敗。Gunicorn 的設定會在後續專章拆解。
+    Cloud Run 控制平台等待回應的期限；Gunicorn `timeout` 處理失去回報的 worker，含義依 worker 類型而異，不能一律當成每個 thread 的單次請求期限。單 sync worker 長時間阻塞與 gthread 的判讀不同，詳見 [Server 架構案例](server_architecture_case.md)。
 
 ## Scale to zero 與 Cold Start
 
@@ -107,6 +107,8 @@ Model API 啟動時需要載入的應用資源較多，因此冷啟動感受通�
 | Data API Service | 1 CPU、512 MiB、min 0、max 3、60 秒；正式服務 concurrency 80 | deploy workflow；Cloud Run Service 唯讀查詢 | 2026-08-23 |
 | Model Gunicorn | 4 gthread workers、每個 25 threads、600 秒 timeout | `ai-asst-model-api/prod/Dockerfile` | 2026-08-23 |
 | Data Gunicorn | 1 sync worker、60 秒 timeout | `ai-asst-data-api/Dockerfile` | 2026-08-23 |
+
+2026-09-07 唯讀設定仍確認上述兩支 API 的 CPU、Memory、concurrency、Request timeout 與 Revision max；Service 層另有 max 20。原表的 max 2／3 指 Revision 限制，與 Service 上限共同生效，不是固定常駐台數。完整版本與新加入的 Monitor／Eval 設定見 [GCP 資源地圖](gcp_resource_map.md)，作用域解讀見 [設定漂移](revisions_rollbacks_drift.md)。
 
 ## 常見問題
 
