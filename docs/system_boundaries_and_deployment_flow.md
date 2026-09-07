@@ -20,7 +20,7 @@ tags:
 這篇以 `ai-asst-km` 作為實際架構案例，示範如何辨認系統邊界，並把 Runtime 與 Deployment 分開閱讀。通用知識分別整理在 API、CI/CD、Cloud Run 與效能分類，不需要依章節編號閱讀。
 
 !!! info "這個系列討論什麼？"
-    本系列記錄 `ai-asst-km` 的系統架構、API、服務啟動、資料邊界、測試、部署與維運，不討論 RAG、Prompt、知識檢索或員工 KM 內容。
+    本系列以通用原理與員工 KM 的程式／設定案例，說明 API、服務啟動、資料邊界、測試、部署與維運。本輪不展開 RAG、Prompt、知識檢索演算法或內部知識內容。KM Monitor、GCP 周邊資源及本站 Chatbot 的界線，另見 [GCP 資源全貌](gcp_resource_map.md)。
 
 ## 前置知識
 
@@ -64,7 +64,7 @@ tags:
 
 ### Deployment：簡單交付步驟保留 Mermaid
 
-Deployment 的完整基礎設施會在後續章節另外用 Deployment Diagram 說明。這裡只需要先認得兩種交付結果，因此保留小型 Mermaid 流程：
+Deployment 的部署節點已整理在 [GCP 資源全貌](gcp_resource_map.md) 的 draw.io 圖。這裡只需要先認得兩種交付結果，因此保留交付流程：
 
 ```mermaid
 flowchart TB
@@ -84,10 +84,11 @@ flowchart TB
 
 1. [Runtime：使用者請求如何流動](runtime_request_flow.md)：Frontend、Model API 與 Data API 如何合作。
 2. [HTTP、GET、POST 與 Flask API](http_get_post_rest_api.md)：Request 如何進入 Flask route 並形成 Response。
-3. 「服務啟動基礎」接著說明 Gunicorn 執行架構；「資料與維運」則說明 MongoDB 資料層。
+3. [Gunicorn 與 Uvicorn 架構案例](server_architecture_case.md)說明啟動方式；[資料邊界](storage_data_boundaries.md)說明 MongoDB、GCS 與暫存空間。
 4. [Deployment：程式碼如何上線](github_actions_cloud_run_deployment.md)：三個 Repository 的 GitHub Actions 交付流程。
 5. [Cloud Run：Service、Revision、Instance](cloud_run_core_concepts.md)：程式部署後在 GCP 如何執行。
 6. [設定、環境變數與 Secret](configuration_and_secrets.md)：公開設定、機密資料與線上設定放在哪裡。
+7. [GCP 資源與維運地圖](gcp_resource_map.md)：延伸到身分、Hosting、排程、監控、回滾與成本。
 
 ## 先記住這四個角色
 

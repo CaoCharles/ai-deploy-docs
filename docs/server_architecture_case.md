@@ -38,6 +38,8 @@ tags:
 
 ## 三個服務的技術組合總覽
 
+本篇保留主 Model／Data API 與本站 Chatbot 的啟動方式對照。員工 KM Repository 後續加入的 FastAPI／async 位於獨立 experiment 路徑，不應與本站 Uvicorn 後端或主 Flask 部署混為一談。2026-09-07 的線上版本見 [GCP 資源地圖](gcp_resource_map.md)，2026-08-28 Runtime A/B 證據見 [JMeter 筆記](jmeter_load_testing.md)。
+
 | 服務 | 完整組合 | Application object | 執行模型 | 設定依據 |
 |---|---|---|---|---|
 | Model API | Gunicorn → WSGI → Flask | `bootstrap_cloud:app` | 4 個 `gthread` workers，每個 worker 25 threads | `ai-asst-model-api/prod/Dockerfile` |

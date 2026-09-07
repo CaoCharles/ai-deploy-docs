@@ -28,6 +28,8 @@ tags:
 
 ## ai-asst-km 的主要 API 地圖
 
+下表聚焦原有聊天契約，Model path 需接在含 `/datastack/ai-asst-km-hr` 的 API base URL 後。前端新版另有 ASGI／SSE 分支，並非主 Flask route 自動支援，詳見 [JSON／SSE 測試案例](jmeter_load_testing.md)。
+
 | 呼叫者 | Method 與 Path | 主要用途 | 是否可能寫入資料 |
 |---|---|---|---|
 | Frontend | `POST /model_predict` | 送出問題並取得回答 | Model API 不寫 session |
@@ -92,7 +94,7 @@ HTTP Method 是 Client 與 Data API 之間的協定；`find_one()`、`update_one
 
 ## 實際設定查證
 
-以下結論以三個 Repository 的最新 `origin/main` 為準：
+下表是 2026-08-23 的程式查證基準；本輪確認的版本與雲端設定見 [GCP 資源地圖](gcp_resource_map.md)，不以舊表推定今天的最新遠端狀態。
 
 | 查證項目 | 現行結論 | 來源 | 查證日期 |
 |---|---|---|---|
@@ -102,7 +104,7 @@ HTTP Method 是 Client 與 Data API 之間的協定；`find_one()`、`update_one
 | JSON 驗證 | Data API 檢查 JSON object、必填欄位與未知欄位 | `ai-asst-data-api/app.py` | 2026-08-23 |
 | 身分傳遞 | Frontend 使用 `Authorization: Bearer` Header | Frontend API Client | 2026-08-23 |
 | CORS Preflight | 兩支 API 都處理 OPTIONS 並加入允許的 CORS Headers | Model/Data API `app.py` | 2026-08-23 |
-| MongoDB 邊界 | 只有 Data API 透過 PyMongo 查詢與寫入 session | `ai-asst-data-api/app.py` | 2026-08-23 |
+| MongoDB 邊界 | 在核心提問鏈路由 Data API 透過 PyMongo 讀寫；Monitor 另有直接唯讀查詢 | `ai-asst-data-api/app.py`；補充見[資料邊界](storage_data_boundaries.md) | 2026-08-23（原基準） |
 
 ## 常見問題
 

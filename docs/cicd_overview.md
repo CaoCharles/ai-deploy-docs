@@ -47,6 +47,8 @@ flowchart LR
 2. [Docker Image 與 Artifact Registry](docker_artifact_registry.md)
 3. [Cloud Run 學習路徑](cloud_run_overview.md)
 4. [環境變數、GitHub Secrets 與 Secret Manager](configuration_and_secrets.md)
+5. [IAM、Service Account、WIF 與 JWT](iam_service_accounts_wif_jwt.md)
+6. [Image、Revision、回滾與設定漂移](revisions_rollbacks_drift.md)
 
 ## 實際專案案例
 
